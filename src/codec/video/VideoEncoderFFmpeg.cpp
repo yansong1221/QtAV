@@ -247,7 +247,7 @@ bool VideoEncoderFFmpegPrivate::open()
     applyOptionsForContext();
     AV_ENSURE_OK(avcodec_open2(avctx, codec, &dict), false);
     // from mpv ao_lavc
-    const int buffer_size = qMax<int>(qMax<int>(width*height*6+200, AV_INPUT_BUFFER_MIN_SIZE), sizeof(AVPicture));//??
+    const int buffer_size = qMax<int>(qMax<int>(width*height*6+200, AV_INPUT_BUFFER_MIN_SIZE), sizeof(AVFrame));//??
     buffer.resize(buffer_size);
     return true;
 }
@@ -368,12 +368,11 @@ bool VideoEncoderFFmpeg::encode(const VideoFrame &frame)
         }
 #endif //HAVE_AVHWCTX
     }
-    AVPacket pkt;
-    av_init_packet(&pkt);
-    pkt.data = (uint8_t*)d.buffer.constData();
-    pkt.size = d.buffer.size();
+    auto pkt = av_packet_alloc();
+    pkt->data = (uint8_t*)d.buffer.constData();
+    pkt->size = d.buffer.size();
     int got_packet = 0;
-    int ret = avcodec_encode_video2(d.avctx, &pkt, f.data(), &got_packet);
+    int ret = avcodec_encode_video2(d.avctx, pkt, f.data(), &got_packet);
     if (ret < 0) {
         qWarning("error avcodec_encode_video2: %s" ,av_err2str(ret));
         return false; //false
@@ -386,7 +385,7 @@ bool VideoEncoderFFmpeg::encode(const VideoFrame &frame)
         return frame.isValid();
     }
    // qDebug("enc avpkt.pts: %lld, dts: %lld.", pkt.pts, pkt.dts);
-    d.packet = Packet::fromAVPacket(&pkt, av_q2d(d.avctx->time_base));
+    d.packet = Packet::fromAVPacket(pkt, av_q2d(d.avctx->time_base));
    // qDebug("enc packet.pts: %.3f, dts: %.3f.", d.packet.pts, d.packet.dts);
     return true;
 }

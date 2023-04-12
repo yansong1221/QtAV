@@ -30,6 +30,7 @@
 #include "utils/Logger.h"
 #include "directx/SurfaceInteropD3D9.h"
 #include <QtCore/QSysInfo>
+#include <QOperatingSystemVersion>
 #define DX_LOG_COMPONENT "DXVA2"
 #include "utils/DirectXHelper.h"
 
@@ -98,7 +99,7 @@ public:
         VideoDecoderD3DPrivate()
     {
         // d3d9+gl interop may not work on optimus moble platforms, 0-copy is enabled only for egl interop
-        if (d3d9::InteropResource::isSupported(d3d9::InteropEGL) && QSysInfo::windowsVersion() >= QSysInfo::WV_VISTA)
+        if (d3d9::InteropResource::isSupported(d3d9::InteropEGL) && QOperatingSystemVersion::current() >= QOperatingSystemVersion::Windows7)
             copy_mode = VideoDecoderFFmpegHW::ZeroCopy;
 
         hd3d9_dll = 0;
@@ -189,7 +190,7 @@ VideoFrame VideoDecoderDXVA::frame()
         VideoFrame f(d.width, d.height, VideoFormat::Format_RGB32);
         f.setBytesPerLine(d.width * 4); //used by gl to compute texture size
         f.setMetaData(QStringLiteral("surface_interop"), QVariant::fromValue(VideoSurfaceInteropPtr(interop)));
-        f.setTimestamp(d.frame->pkt_pts/1000.0);
+        f.setTimestamp(d.frame->pts/1000.0);
         f.setDisplayAspectRatio(d.getDAR(d.frame));
         return f;
     }

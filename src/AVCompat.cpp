@@ -33,7 +33,7 @@ int avio_feof(AVIOContext *s)
 }
 #endif
 #if QTAV_USE_LIBAV(LIBAVFORMAT)
-int avformat_alloc_output_context2(AVFormatContext **avctx, AVOutputFormat *oformat, const char *format, const char *filename)
+int avformat_alloc_output_context2(AVFormatContext **avctx, ff_const59 AVOutputFormat *oformat, const char *format, const char *filename)
 {
     AVFormatContext *s = avformat_alloc_context();
     int ret = 0;

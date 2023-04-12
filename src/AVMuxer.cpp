@@ -81,7 +81,7 @@ public:
     //copy the info, not parse the file when constructed, then need member vars
     QString file;
     QString file_orig;
-    const AVOutputFormat *format;
+    ff_const59 AVOutputFormat *format;
     QString format_forced;
     MediaIO *io;
 

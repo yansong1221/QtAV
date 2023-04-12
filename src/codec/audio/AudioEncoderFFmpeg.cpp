@@ -54,7 +54,7 @@ public:
     AudioEncoderFFmpegPrivate()
         : AudioEncoderPrivate()
     {
-        avcodec_register_all();
+        //avcodec_register_all();
         // NULL: codec-specific defaults won't be initialized, which may result in suboptimal default settings (this is important mainly for encoders, e.g. libx264).
         avctx = avcodec_alloc_context3(NULL);
     }
@@ -199,12 +199,11 @@ bool AudioEncoderFFmpeg::encode(const AudioFrame &frame)
             f->extended_data[i] = (uint8_t*)frame.constBits(i);
         }
     }
-    AVPacket pkt;
-    av_init_packet(&pkt);
-    pkt.data = (uint8_t*)d.buffer.constData(); //NULL
-    pkt.size = d.buffer.size(); //0
+    auto pkt = av_packet_alloc();
+    pkt->data = (uint8_t*)d.buffer.constData(); //NULL
+    pkt->size = d.buffer.size(); //0
     int got_packet = 0;
-    int ret = avcodec_encode_audio2(d.avctx, &pkt, f, &got_packet);
+    int ret = avcodec_encode_audio2(d.avctx, pkt, f, &got_packet);
     av_frame_free(&f);
     if (ret < 0) {
         //qWarning("error avcodec_encode_audio2: %s" ,av_err2str(ret));
@@ -218,7 +217,7 @@ bool AudioEncoderFFmpeg::encode(const AudioFrame &frame)
         return frame.isValid();
     }
    // qDebug("enc avpkt.pts: %lld, dts: %lld.", pkt.pts, pkt.dts);
-    d.packet = Packet::fromAVPacket(&pkt, av_q2d(d.avctx->time_base));
+    d.packet = Packet::fromAVPacket(pkt, av_q2d(d.avctx->time_base));
    // qDebug("enc packet.pts: %.3f, dts: %.3f.", d.packet.pts, d.packet.dts);
     return true;
 }
