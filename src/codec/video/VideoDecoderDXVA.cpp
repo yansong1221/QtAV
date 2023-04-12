@@ -269,7 +269,7 @@ bool VideoDecoderDXVAPrivate::createDevice()
         return false;
     }
     vendor = QString::fromLatin1(DXHelper::vendorName(d3dai.VendorId));
-    description = QString().sprintf("DXVA2 (%.*s, vendor %lu(%s), device %lu, revision %lu)",
+    description = QString::asprintf("DXVA2 (%.*s, vendor %lu(%s), device %lu, revision %lu)",
                                     sizeof(d3dai.Description), d3dai.Description,
                                     d3dai.VendorId, qPrintable(vendor), d3dai.DeviceId, d3dai.Revision);
 

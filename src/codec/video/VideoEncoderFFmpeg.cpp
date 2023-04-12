@@ -116,11 +116,11 @@ bool VideoEncoderFFmpegPrivate::open()
     nb_encoded = 0LL;
     if (codec_name.isEmpty()) {
         // copy ctx from muxer by copyAVCodecContext
-        AVCodec *codec = avcodec_find_encoder(avctx->codec_id);
+        const AVCodec *codec = avcodec_find_encoder(avctx->codec_id);
         AV_ENSURE_OK(avcodec_open2(avctx, codec, &dict), false);
         return true;
     }
-    AVCodec *codec = avcodec_find_encoder_by_name(codec_name.toUtf8().constData());
+    const AVCodec *codec = avcodec_find_encoder_by_name(codec_name.toUtf8().constData());
     if (!codec) {
         const AVCodecDescriptor* cd = avcodec_descriptor_get_by_name(codec_name.toUtf8().constData());
         if (cd) {

@@ -471,15 +471,22 @@ QVariantList AVPlayer::Private::getTracksInfo(AVDemuxer *demuxer, AVDemuxer::Str
         t[QStringLiteral("stream_index")] = QVariant(s);
 
         AVStream *stream = demuxer->formatContext()->streams[s];
-        AVCodecContext *ctx = stream->codec;
+		AVCodecContext* ctx = avcodec_alloc_context3(nullptr);
+		avcodec_parameters_to_context(ctx, stream->codecpar);
         if (ctx) {
             const AVCodecDescriptor* codec_desc = avcodec_descriptor_get(ctx->codec_id);
-            if (codec_desc)
-                t[QStringLiteral("codec")] = QByteArray(codec_desc->name);
-            else
-                continue;
+            if (!codec_desc)
+            {
+				avcodec_free_context(&ctx);
+				continue;
+            }
+            
+			t[QStringLiteral("codec")] = QByteArray(codec_desc->name);        
             if (ctx->extradata)
                 t[QStringLiteral("extra")] = QByteArray((const char*)ctx->extradata, ctx->extradata_size);
+
+			avcodec_parameters_from_context(stream->codecpar, ctx);
+			avcodec_free_context(&ctx);
         }
         AVDictionaryEntry *tag = av_dict_get(stream->metadata, "language", NULL, 0);
         if (!tag)

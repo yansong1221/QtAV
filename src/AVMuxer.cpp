@@ -81,7 +81,7 @@ public:
     //copy the info, not parse the file when constructed, then need member vars
     QString file;
     QString file_orig;
-    AVOutputFormat *format;
+    const AVOutputFormat *format;
     QString format_forced;
     MediaIO *io;
 
@@ -94,7 +94,7 @@ public:
 
 AVStream *AVMuxer::Private::addStream(AVFormatContext* ctx, const QString &codecName, AVCodecID codecId)
 {
-    AVCodec *codec = NULL;
+   const AVCodec *codec = NULL;
     if (!codecName.isEmpty()) {
         codec = avcodec_find_encoder_by_name(codecName.toUtf8().constData());
         if (!codec) {
@@ -120,15 +120,20 @@ AVStream *AVMuxer::Private::addStream(AVFormatContext* ctx, const QString &codec
     // set by avformat if unset
     s->id = ctx->nb_streams - 1;
     s->time_base = kTB;
-    AVCodecContext *c = s->codec;
-    c->codec_id = codec->id;
-    // Using codec->time_base is deprecated, but needed for older lavf.
-    c->time_base = s->time_base;
-    /* Some formats want stream headers to be separate. */
-    if (ctx->oformat->flags & AVFMT_GLOBALHEADER)
-        c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-    // expose avctx to encoder and set properties in encoder?
-    // list codecs for a given format in ui
+
+    AVCodecContext* c = avcodec_alloc_context3(codec);
+    avcodec_parameters_to_context(c, s->codecpar);
+    
+	c->codec_id = codec->id;
+	// Using codec->time_base is deprecated, but needed for older lavf.
+	c->time_base = s->time_base;
+	/* Some formats want stream headers to be separate. */
+	if (ctx->oformat->flags & AVFMT_GLOBALHEADER)
+		c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+	// expose avctx to encoder and set properties in encoder?
+	// list codecs for a given format in ui
+    avcodec_parameters_from_context(s->codecpar, c);
+    avcodec_free_context(&c);
     return s;
 }
 
@@ -137,16 +142,21 @@ bool AVMuxer::Private::prepareStreams()
     audio_streams.clear();
     video_streams.clear();
     subtitle_streams.clear();
-    AVOutputFormat* fmt = format_ctx->oformat;
+    const AVOutputFormat* fmt = format_ctx->oformat;
     if (venc) {
         AVStream *s = addStream(format_ctx, venc->codecName(), fmt->video_codec);
         if (s) {
-            AVCodecContext *c = s->codec;
+            AVCodecContext* c = avcodec_alloc_context3(nullptr);
+            avcodec_parameters_to_context(c, s->codecpar);
+
             c->bit_rate = venc->bitRate();
             c->width = venc->width();
             c->height = venc->height();
             /// MUST set after encoder is open to ensure format is valid and the same
             c->pix_fmt = (AVPixelFormat)VideoFormat::pixelFormatToFFmpeg(venc->pixelFormat());
+
+			avcodec_parameters_from_context(s->codecpar, c);
+			avcodec_free_context(&c);
 
             // Set avg_frame_rate based on encoder frame_rate
             s->avg_frame_rate = av_d2q(venc->frameRate(), venc->frameRate()*1001.0+2);
@@ -157,7 +167,9 @@ bool AVMuxer::Private::prepareStreams()
     if (aenc) {
         AVStream *s = addStream(format_ctx, aenc->codecName(), fmt->audio_codec);
         if (s) {
-            AVCodecContext *c = s->codec;
+			AVCodecContext* c = avcodec_alloc_context3(nullptr);
+			avcodec_parameters_to_context(c, s->codecpar);
+
             c->bit_rate = aenc->bitRate();
             /// MUST set after encoder is open to ensure format is valid and the same
             c->sample_rate = aenc->audioFormat().sampleRate();
@@ -176,6 +188,8 @@ bool AVMuxer::Private::prepareStreams()
                 c->extradata = avctx->extradata;
                 c->extradata_size = avctx->extradata_size;
             }
+			avcodec_parameters_from_context(s->codecpar, c);
+			avcodec_free_context(&c);
 
             audio_streams.push_back(s->id);
         }

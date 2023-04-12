@@ -121,11 +121,9 @@ bool VideoDecoderFFmpegBase::decode(const Packet &packet)
     int got_frame_ptr = 0;
     int ret = 0;
     if (packet.isEOF()) {
-        AVPacket eofpkt;
-        av_init_packet(&eofpkt);
-        eofpkt.data = NULL;
-        eofpkt.size = 0;
-        ret = avcodec_decode_video2(d.codec_ctx, d.frame, &got_frame_ptr, &eofpkt);
+        auto eofpkt = av_packet_alloc();
+        ret = avcodec_decode_video2(d.codec_ctx, d.frame, &got_frame_ptr, eofpkt);
+        av_packet_free(&eofpkt);
     } else {
         ret = avcodec_decode_video2(d.codec_ctx, d.frame, &got_frame_ptr, (AVPacket*)packet.asAVPacket());
     }
