@@ -310,10 +310,10 @@ SubtitleFrame SubtitleProcessorFFmpeg::processLine(const QByteArray &data, qreal
             f.text = QString::fromUtf8(data.constData(), data.size()); //utf-8 is required
         return f;
     }
-    AVPacket packet;
-    av_init_packet(&packet);
-    packet.size = data.size();
-    packet.data = (uint8_t*)data.constData();
+   
+    auto packet = av_packet_alloc();
+    packet->size = data.size();
+    packet->data = (uint8_t*)data.constData();
     /*
      * ffmpeg <2.5: AVPakcet.data has original text including time info, decoder use that info to get correct time
      * "Dialogue: 0,0:00:20.21,0:00:22.96,*Default,NTP,0000,0000,0000,blablabla
@@ -322,14 +322,14 @@ SubtitleFrame SubtitleProcessorFFmpeg::processLine(const QByteArray &data, qreal
      */
     // no codec_ctx for internal sub
     const double unit = 1.0/av_q2d(codec_ctx->time_base); //time_base is deprecated, use framerate since 17085a0, check FF_API_AVCTX_TIMEBASE
-    packet.pts = pts * unit;
-    packet.duration = duration * unit;
+    packet->pts = pts * unit;
+    packet->duration = duration * unit;
     AVSubtitle sub;
     memset(&sub, 0, sizeof(sub));
     int got_subtitle = 0;
-    int ret = avcodec_decode_subtitle2(codec_ctx, &sub, &got_subtitle, &packet);
+    int ret = avcodec_decode_subtitle2(codec_ctx, &sub, &got_subtitle, packet);
     if (ret < 0 || !got_subtitle) {
-        av_packet_unref(&packet);
+        av_packet_free(&packet);
         avsubtitle_free(&sub);
         return SubtitleFrame();
     }
@@ -358,7 +358,7 @@ SubtitleFrame SubtitleProcessorFFmpeg::processLine(const QByteArray &data, qreal
             break;
         }
     }
-    av_packet_unref(&packet);
+    av_packet_free(&packet);
     avsubtitle_free(&sub);
     return frame;
 }

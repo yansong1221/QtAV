@@ -223,7 +223,8 @@ void Packet::skip(int bytes)
 QDebug operator<<(QDebug dbg, const Packet &pkt)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-    using Qt::hex, Qt::dec;
+    using Qt::hex;
+    using Qt::dec;
 #endif
     dbg.nospace() << "QtAV::Packet.data " << hex << (qptrdiff)pkt.data.constData() << "+" << dec << pkt.data.size();
     dbg.nospace() << ", dts: " << pkt.dts;

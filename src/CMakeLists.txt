@@ -12,8 +12,6 @@ INCLUDE(CheckTypeSize)
 include_directories(${QTDIR}/include) #TODO: remove. use external/include
 get_filename_component(QTDIR "${QTDIR}" ABSOLUTE)
 
-find_package(PkgConfig)
-
 list(APPEND EXTRA_INCLUDE ${QTAV_SOURCE_DIR}/external/include)
 list(APPEND EXTRA_LIBS ${CMAKE_LIBRARY_PATH_FLAG}${QTAV_SOURCE_DIR}/external/lib)
 if(APPLE)
@@ -30,57 +28,44 @@ if(EXISTS ${QTAV_SOURCE_DIR}/contrib/capi/capi.h)
     list(APPEND EXTRA_DEFS -DQTAV_HAVE_CAPI=1)
 endif()
 
-pkg_check_modules (AVFORMAT libavformat REQUIRED)
-if(${AVFORMAT_FOUND})
-    list(APPEND PKG_CONFIG_MODULES AVFORMAT)
-    message("Found AVFORMAT: ${AVFORMAT_LINK_LIBRARIES}")
+if(NOT FFMPEG_FOUND)
+  find_package(FFmpeg REQUIRED)
+  set(FFMPEG_AVFORMAT_FOUND ${FFMPEG_libavformat_FOUND} CACHE BOOL "")
+  set(FFMPEG_AVCODEC_FOUND ${FFMPEG_libavcodec_FOUND} CACHE BOOL "")
+  set(FFMPEG_SWSCALE_FOUND ${FFMPEG_libswscale_FOUND} CACHE BOOL "")
+  set(FFMPEG_AVUTIL_FOUND ${FFMPEG_libavutil_FOUND} CACHE BOOL "")
+  set(FFMPEG_AVFILTER_FOUND ${FFMPEG_libavfilter_FOUND} CACHE BOOL "")
+  set(FFMPEG_AVDEVICE_FOUND ${FFMPEG_libavdevice_FOUND} CACHE BOOL "")
+  set(FFMPEG_AVRESAMPLE_FOUND ${FFMPEG_libavresample_FOUND} CACHE BOOL "")
+  set(FFMPEG_SWRESAMPLE_FOUND ${FFMPEG_libswresample_FOUND} CACHE BOOL "")
 endif()
 
-pkg_check_modules (AVCODEC libavcodec REQUIRED)
-if(${AVCODEC_FOUND})
-    list(APPEND PKG_CONFIG_MODULES AVCODEC)
-    message("Found AVCODEC: ${AVCODEC_LINK_LIBRARIES}")
+if(FFMPEG_AVFORMAT_FOUND AND FFMPEG_AVCODEC_FOUND AND FFMPEG_SWSCALE_FOUND AND 
+FFMPEG_AVUTIL_FOUND AND FFMPEG_AVFILTER_FOUND AND FFMPEG_AVDEVICE_FOUND) 
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVFORMAT=1)
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVCODEC=1)
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_SWSCALE=1)
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVUTIL=1)
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVFILTER=1)
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVDEVICE=1)
+else()
+  message(FATAL_ERROR "libavformat libavcodec libswscale libavutil libavfilter libavdevice is required")
 endif()
 
-pkg_check_modules (SWSCALE libswscale REQUIRED)
-if(${SWSCALE_FOUND})
-    list(APPEND PKG_CONFIG_MODULES SWSCALE)
-    message("Found SWSCALE: ${SWSCALE_LINK_LIBRARIES}")
+if(FFMPEG_AVRESAMPLE_FOUND)
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVRESAMPLE=1)
+  list(APPEND EXTRA_DEFS -DBUILD_AVR)  
 endif()
 
-pkg_check_modules (AVUTIL libavutil REQUIRED)
-if(${AVUTIL_FOUND})
-    list(APPEND PKG_CONFIG_MODULES AVUTIL)
-    message("Found AVUTIL: ${AVUTIL_LINK_LIBRARIES}")
+if(FFMPEG_SWRESAMPLE_FOUND)
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_SWRESAMPLE=1)
+  list(APPEND EXTRA_DEFS -DBUILD_SWR)  
 endif()
 
-pkg_check_modules (AVFILTER libavfilter)
-if(${AVFILTER_FOUND})
-    list(APPEND PKG_CONFIG_MODULES AVFILTER)
-    message("Found AVFILTER: ${AVFILTER_LINK_LIBRARIES}")
+if (NOT FFMPEG_AVRESAMPLE_FOUND AND NOT FFMPEG_SWRESAMPLE_FOUND)
+    message(FATAL_ERROR "libswresample or libavresample is required")
 endif()
 
-pkg_check_modules (AVDEVICE libavdevice)
-if(${AVDEVICE_FOUND})
-    list(APPEND PKG_CONFIG_MODULES AVDEVICE)
-    message("Found AVDEVICE: ${AVDEVICE_LINK_LIBRARIES}")
-endif()
-
-pkg_check_modules (AVRESAMPLE libavresample)
-if(${AVRESAMPLE_FOUND})
-    list(APPEND PKG_CONFIG_MODULES AVRESAMPLE)
-    message("Found AVRESAMPLE: ${AVRESAMPLE_LINK_LIBRARIES}")
-endif()
-
-pkg_check_modules (SWRESAMPLE libswresample)
-if(${SWRESAMPLE_FOUND})
-    list(APPEND PKG_CONFIG_MODULES SWRESAMPLE)
-    message("Found SWRESAMPLE: ${SWRESAMPLE_LINK_LIBRARIES}")
-endif()
-
-if (NOT AVRESAMPLE_FOUND AND NOT SWRESAMPLE_FOUND)
-    message(FATAL_ERROR "swresample or avresample is required")
-endif()
 
 list(APPEND EXTRA_DEFS -DBUILD_QTAV_LIB -D__STDC_CONSTANT_MACROS)
 
@@ -225,6 +210,9 @@ if(Qt5Gui_OPENGL_IMPLEMENTATION STREQUAL GL) # windows always set to GL
   endif()
 else()
   set(OPENGLES 1)
+  if(WIN32)
+    set(DYNAMIC_GL 1)
+  endif()
 endif()
 if(OPENGLES OR DYNAMIC_GL)
   set(HAVE_EGL 1)
@@ -357,9 +345,9 @@ if(WIN32 OR WindowsStore OR WindowsPhone)
   )
   list(APPEND EXTRA_DEFS -DQTAV_HAVE_XAUDIO2=1)
   set(OLD_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
-  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} avcodec) # TODO: lib dir
+  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${FFMPEG_LIBRARIES}) # TODO: lib dir
   set(OLD_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES})
-  set(CMAKE_REQUIRED_INCLUDES ${EXTRA_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR})
+  set(CMAKE_REQUIRED_INCLUDES ${EXTRA_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR} ${FFMPEG_INCLUDE_DIRS})
   check_cxx_source_compiles("
   #include \"directx/dxcompat.h\"
   #include <d3d11.h>
@@ -377,8 +365,6 @@ if(WIN32 OR WindowsStore OR WindowsPhone)
   set(CMAKE_REQUIRED_LIBRARIES ${OLD_REQUIRED_LIBRARIES})
   if(HAVE_D3D11)
     # https://crascit.com/2015/03/28/enabling-cxx11-in-cmake/ (global and specified target)
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
     list(APPEND EXTRA_DEFS -DQTAV_HAVE_D3D11VA=1)
     list(APPEND SOURCES
       codec/video/VideoDecoderD3D11.cpp
@@ -388,7 +374,7 @@ if(WIN32 OR WindowsStore OR WindowsPhone)
     if(HAVE_EGL)
       list(APPEND SOURCES directx/SurfaceInteropD3D11EGL.cpp)
     endif()
-    if(HAVE_OPENGL AND NOT OPENGLES) # dynamic gl or desktop
+    if(OPENGL OR DYNAMIC_GL) # dynamic gl or desktop
       list(APPEND SOURCES directx/SurfaceInteropD3D11GL.cpp)
     endif()
   endif()
@@ -502,14 +488,9 @@ list(REMOVE_DUPLICATES EXTRA_LIBS)
 target_link_libraries(${MODULE} 
   LINK_PRIVATE ${EXTRA_LIBS}
   LINK_PUBLIC Qt5::Core Qt5::Gui # will add include dirs, macros etc.
+  LINK_PUBLIC ${FFMPEG_LIBRARIES} 
 )
-
-foreach(PKG_CONFIG_MODULE ${PKG_CONFIG_MODULES})
-    target_link_libraries(${MODULE} PRIVATE ${${PKG_CONFIG_MODULE}_LINK_LIBRARIES})
-    target_include_directories(${MODULE} PRIVATE ${${PKG_CONFIG_MODULE}_INCLUDE_DIRS})
-    target_compile_options(${MODULE} PRIVATE ${${PKG_CONFIG_MODULE}_CFLAGS_OTHER})
-    target_compile_definitions(${MODULE} PRIVATE -DQTAV_HAVE_${PKG_CONFIG_MODULE}=1)
-endforeach()
+target_include_directories(${MODULE} PRIVATE ${FFMPEG_INCLUDE_DIRS})
 
 set_target_properties(${MODULE} PROPERTIES
   MACOSX_RPATH ON

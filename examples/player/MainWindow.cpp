@@ -1067,7 +1067,7 @@ void MainWindow::wheelEvent(QWheelEvent *e)
         return;
     }
 #endif //WHEEL_SPEED
-    QPointF p = mpRenderer->widget()->mapFrom(this, e->pos());
+    QPointF p = mpRenderer->widget()->mapFrom(this, e->position().toPoint());
     QPointF fp = mpRenderer->mapToFrame(p);
     //qDebug() <<  p << fp;
     if (fp.x() < 0)

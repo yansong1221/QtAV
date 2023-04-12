@@ -1,6 +1,16 @@
-cmake_minimum_required(VERSION 2.8.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20)
 
 project(QTAV)
+
+if (WIN32)
+  add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+  add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
+endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 set(QTAV_MAJOR 1)
 set(QTAV_MINOR 13)
@@ -8,7 +18,7 @@ set(QTAV_PATCH 0)
 set(PROJECT_VERSION ${QTAV_MAJOR}.${QTAV_MINOR}.${QTAV_PATCH})
 set(SO_VERSION ${QTAV_MAJOR})
 
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(POLICY CMP0063) # visibility. since 3.3
@@ -19,6 +29,7 @@ if(POLICY CMP0071)
 endif()
 set(CMAKE_CXX_VISIBILITY_PRESET hidden) #use with -fdata-sections -ffunction-sections to reduce target size
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
 
 
 option(BUILD_EXAMPLES "Build examples" ON)
@@ -102,19 +113,19 @@ install(FILES
   DESTINATION ${QTAV_INSTALL_LIBS}/cmake
 )
 
-if(CMAKE_GENERATOR MATCHES "Visual Studio.*")
-  set(UCRT_INCLUDE $ENV{UniversalCRTSDKDir}Include\\$ENV{UCRTVersion}\\ucrt)
-  set(VC_ARCH $ENV{Platform})
-  if(NOT VC_ARCH)
-    set(VC_ARCH x86)
-  endif()
-  set(UCRT_LIB $ENV{UniversalCRTSDKDir}Lib\\$ENV{UCRTVersion}\\ucrt\\${VC_ARCH})
-  if(EXISTS ${UCRT_INCLUDE})
-  message("VS project. ucrt: ${UCRT_LIB}")
-    include_directories(${UCRT_INCLUDE})
-    link_libraries(${CMAKE_LIBRARY_PATH_FLAG}${UCRT_LIB})
-  endif()
-endif()
+# if(CMAKE_GENERATOR MATCHES "Visual Studio.*")
+#   set(UCRT_INCLUDE $ENV{UniversalCRTSDKDir}Include\\$ENV{UCRTVersion}\\ucrt)
+#   set(VC_ARCH $ENV{Platform})
+#   if(NOT VC_ARCH)
+#     set(VC_ARCH x86)
+#   endif()
+#   set(UCRT_LIB $ENV{UniversalCRTSDKDir}Lib\\$ENV{UCRTVersion}\\ucrt\\${VC_ARCH})
+#   if(EXISTS ${UCRT_INCLUDE})
+#   message("VS project. ucrt: ${UCRT_LIB}")
+#     include_directories(${UCRT_INCLUDE})
+#     link_libraries(${CMAKE_LIBRARY_PATH_FLAG}${UCRT_LIB})
+#   endif()
+# endif()
 
 add_subdirectory(src)
 
