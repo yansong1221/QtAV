@@ -27,6 +27,7 @@
 #include "PlainText.h"
 #include "utils/Logger.h"
 #include <QIODevice>
+#include "AVWrapper.h"
 
 namespace QtAV {
 
@@ -311,7 +312,8 @@ SubtitleFrame SubtitleProcessorFFmpeg::processLine(const QByteArray &data, qreal
         return f;
     }
    
-    auto packet = av_packet_alloc();
+    Wrapper::AVPacketWrapper packet;
+
     packet->size = data.size();
     packet->data = (uint8_t*)data.constData();
     /*
@@ -327,9 +329,8 @@ SubtitleFrame SubtitleProcessorFFmpeg::processLine(const QByteArray &data, qreal
     AVSubtitle sub;
     memset(&sub, 0, sizeof(sub));
     int got_subtitle = 0;
-    int ret = avcodec_decode_subtitle2(codec_ctx, &sub, &got_subtitle, packet);
+    int ret = avcodec_decode_subtitle2(codec_ctx, &sub, &got_subtitle, &packet);
     if (ret < 0 || !got_subtitle) {
-        av_packet_free(&packet);
         avsubtitle_free(&sub);
         return SubtitleFrame();
     }
@@ -358,7 +359,6 @@ SubtitleFrame SubtitleProcessorFFmpeg::processLine(const QByteArray &data, qreal
             break;
         }
     }
-    av_packet_free(&packet);
     avsubtitle_free(&sub);
     return frame;
 }

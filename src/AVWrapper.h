@@ -1,5 +1,6 @@
 #pragma once
 
+struct AVFrame;
 struct AVPacket;
 struct AVCodecContext;
 struct AVCodecParameters;
@@ -23,6 +24,23 @@ namespace QtAV::Wrapper {
 		::AVPacket* operator->() const;
 	private:
 		::AVPacket* packet_;
+	};
+
+	class AVFrameWapper
+	{
+	public:
+		AVFrameWapper();
+		~AVFrameWapper();
+	public:
+		const AVFrame* data() const { return frame_; }
+		AVFrame* data() { return frame_; }
+
+		const AVFrame* operator&() const { return frame_; }
+		AVFrame* operator&() { return frame_; }
+
+		AVFrame* operator->() const { return frame_; }
+	private:
+		AVFrame* frame_;
 	};
 
 	class AVCodecContextWrapper {

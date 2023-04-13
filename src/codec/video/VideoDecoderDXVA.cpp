@@ -191,7 +191,7 @@ VideoFrame VideoDecoderDXVA::frame()
         f.setBytesPerLine(d.width * 4); //used by gl to compute texture size
         f.setMetaData(QStringLiteral("surface_interop"), QVariant::fromValue(VideoSurfaceInteropPtr(interop)));
         f.setTimestamp(d.frame->pts/1000.0);
-        f.setDisplayAspectRatio(d.getDAR(d.frame));
+        f.setDisplayAspectRatio(d.getDAR(&d.frame));
         return f;
     }
     class ScopedD3DLock {

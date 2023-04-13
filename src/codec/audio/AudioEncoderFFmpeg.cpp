@@ -26,6 +26,7 @@
 #include "QtAV/private/factory.h"
 #include "QtAV/version.h"
 #include "utils/Logger.h"
+#include "AVWrapper.h"
 
 /*!
  * options (properties) are from libavcodec/options_table.h
@@ -177,9 +178,8 @@ AudioEncoderId AudioEncoderFFmpeg::id() const
 bool AudioEncoderFFmpeg::encode(const AudioFrame &frame)
 {
     DPTR_D(AudioEncoderFFmpeg);
-    AVFrame *f = NULL;
+    Wrapper::AVFrameWapper f;
     if (frame.isValid()) {
-        f = av_frame_alloc();
         const AudioFormat fmt(frame.format());
         f->format = fmt.sampleFormatFFmpeg();
         f->channel_layout = fmt.channelLayoutFFmpeg();
@@ -199,15 +199,15 @@ bool AudioEncoderFFmpeg::encode(const AudioFrame &frame)
             f->extended_data[i] = (uint8_t*)frame.constBits(i);
         }
     }
-    auto pkt = av_packet_alloc();
+    Wrapper::AVPacketWrapper pkt;
+
     pkt->data = (uint8_t*)d.buffer.constData(); //NULL
     pkt->size = d.buffer.size(); //0
     int got_packet = 0;
-    int ret = avcodec_encode_audio2(d.avctx, pkt, f, &got_packet);
-    av_frame_free(&f);
+    int ret = avcodec_encode_audio2(d.avctx, &pkt, &f, &got_packet);
+  
     if (ret < 0) {
         //qWarning("error avcodec_encode_audio2: %s" ,av_err2str(ret));
-        //av_packet_unref(&pkt); //FIXME
         return false; //false
     }
     if (!got_packet) {
@@ -217,7 +217,7 @@ bool AudioEncoderFFmpeg::encode(const AudioFrame &frame)
         return frame.isValid();
     }
    // qDebug("enc avpkt.pts: %lld, dts: %lld.", pkt.pts, pkt.dts);
-    d.packet = Packet::fromAVPacket(pkt, av_q2d(d.avctx->time_base));
+    d.packet = Packet::fromAVPacket(&pkt, av_q2d(d.avctx->time_base));
    // qDebug("enc packet.pts: %.3f, dts: %.3f.", d.packet.pts, d.packet.dts);
     return true;
 }

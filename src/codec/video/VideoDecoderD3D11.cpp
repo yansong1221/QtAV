@@ -188,7 +188,7 @@ VideoFrame VideoDecoderD3D11::frame()
         }
         f.setMetaData(QStringLiteral("surface_interop"), QVariant::fromValue(VideoSurfaceInteropPtr(interop)));
         f.setTimestamp(d.frame->pts/1000.0);
-        f.setDisplayAspectRatio(d.getDAR(d.frame));
+        f.setDisplayAspectRatio(d.getDAR(&d.frame));
         return f;
     }
 //    qDebug("process for view: %p, texture: %p", surface, texture.Get());

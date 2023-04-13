@@ -329,7 +329,7 @@ VideoFrame VideoDecoderFFmpegHW::copyToFrame(const VideoFormat& fmt, int surface
         frame = frame.clone();
     }
     frame.setTimestamp(double(d.frame->pts)/1000.0);
-    frame.setDisplayAspectRatio(d.getDAR(d.frame));
+    frame.setDisplayAspectRatio(d.getDAR(&d.frame));
     d.updateColorDetails(&frame);
     return frame;
 }

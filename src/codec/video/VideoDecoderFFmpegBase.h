@@ -25,6 +25,7 @@
 #include "QtAV/VideoDecoder.h"
 #include "QtAV/private/AVDecoder_p.h"
 #include "QtAV/private/AVCompat.h"
+#include "AVWrapper.h"
 
 namespace QtAV {
 
@@ -47,25 +48,20 @@ class VideoDecoderFFmpegBasePrivate : public VideoDecoderPrivate
 public:
     VideoDecoderFFmpegBasePrivate()
         : VideoDecoderPrivate()
-        , frame(0)
         , width(0)
         , height(0)
     {
 #if !AVCODEC_STATIC_REGISTER
         avcodec_register_all();
 #endif
-        frame = av_frame_alloc();
     }
     virtual ~VideoDecoderFFmpegBasePrivate() {
-        if (frame) {
-            av_frame_free(&frame);
-            frame = 0;
-        }
+
     }
     void updateColorDetails(VideoFrame* f);
     qreal getDAR(AVFrame *f);
 
-    AVFrame *frame; //set once and not change
+    Wrapper::AVFrameWapper frame; //set once and not change
     int width, height; //The current decoded frame size
 };
 

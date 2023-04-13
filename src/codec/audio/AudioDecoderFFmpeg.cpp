@@ -28,6 +28,7 @@
 #include "QtAV/private/factory.h"
 #include "QtAV/version.h"
 #include "utils/Logger.h"
+#include "AVWrapper.h"
 
 namespace QtAV {
 
@@ -61,20 +62,16 @@ class AudioDecoderFFmpegPrivate Q_DECL_FINAL: public AudioDecoderPrivate
 public:
     AudioDecoderFFmpegPrivate()
         : AudioDecoderPrivate()
-        , frame(av_frame_alloc())
     {
 #if !AVCODEC_STATIC_REGISTER
         avcodec_register_all();
 #endif
     }
     ~AudioDecoderFFmpegPrivate() {
-        if (frame) {
-            av_frame_free(&frame);
-            frame = 0;
-        }
+
     }
 
-    AVFrame *frame; //set once and not change
+    Wrapper::AVFrameWapper frame; //set once and not change
 };
 
 AudioDecoderId AudioDecoderFFmpeg::id() const
@@ -96,12 +93,11 @@ bool AudioDecoderFFmpeg::decode(const Packet &packet)
     int got_frame_ptr = 0;
     int ret = 0;
     if (packet.isEOF()) {
-        auto eofpkt = av_packet_alloc();
-        ret = avcodec_decode_audio4(d.codec_ctx, d.frame, &got_frame_ptr, eofpkt);
-        av_packet_free(&eofpkt);
+        Wrapper::AVPacketWrapper eofpkt;
+        ret = avcodec_decode_audio4(d.codec_ctx, &d.frame, &got_frame_ptr, &eofpkt);
     } else {
     // const AVPacket*: ffmpeg >= 1.0. no libav
-        ret = avcodec_decode_audio4(d.codec_ctx, d.frame, &got_frame_ptr, (AVPacket*)packet.asAVPacket());
+        ret = avcodec_decode_audio4(d.codec_ctx, &d.frame, &got_frame_ptr, (AVPacket*)packet.asAVPacket());
     }
     d.undecoded_size = qMin(packet.data.size() - ret, packet.data.size());
     if (ret == AVERROR(EAGAIN)) {

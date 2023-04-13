@@ -33,6 +33,7 @@ extern "C" {
 #include <libavutil/hwcontext.h>
 }
 #endif
+#include "AVWrapper.h"
 
 /*!
  * options (properties) are from libavcodec/options_table.h
@@ -368,14 +369,14 @@ bool VideoEncoderFFmpeg::encode(const VideoFrame &frame)
         }
 #endif //HAVE_AVHWCTX
     }
-    auto pkt = av_packet_alloc();
+    Wrapper::AVPacketWrapper pkt;
+
     pkt->data = (uint8_t*)d.buffer.constData();
     pkt->size = d.buffer.size();
     int got_packet = 0;
-    int ret = avcodec_encode_video2(d.avctx, pkt, f.data(), &got_packet);
+    int ret = avcodec_encode_video2(d.avctx, &pkt, f.data(), &got_packet);
     if (ret < 0) {
         qWarning("error avcodec_encode_video2: %s" ,av_err2str(ret));
-        av_packet_free(&pkt);
         return false; //false
     }
     d.nb_encoded++;
@@ -383,13 +384,11 @@ bool VideoEncoderFFmpeg::encode(const VideoFrame &frame)
         qWarning("no packet got");
         d.packet = Packet();
         // invalid frame means eof
-        av_packet_free(&pkt);
         return frame.isValid();
     }
    // qDebug("enc avpkt.pts: %lld, dts: %lld.", pkt.pts, pkt.dts);
-    d.packet = Packet::fromAVPacket(pkt, av_q2d(d.avctx->time_base));
+    d.packet = Packet::fromAVPacket(&pkt, av_q2d(d.avctx->time_base));
    // qDebug("enc packet.pts: %.3f, dts: %.3f.", d.packet.pts, d.packet.dts);
-    av_packet_free(&pkt);
     return true;
 }
 

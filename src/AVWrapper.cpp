@@ -62,6 +62,17 @@ namespace QtAV::Wrapper {
 		return packet_;
 	}
 
+	AVFrameWapper::AVFrameWapper()
+		:frame_(av_frame_alloc())
+	{
+
+	}
+
+	AVFrameWapper::~AVFrameWapper()
+	{
+		av_frame_free(&frame_);
+	}
+
 	AVCodecContextWrapper::AVCodecContextWrapper()
 		:ctx_(avcodec_alloc_context3(nullptr))
 	{
@@ -91,5 +102,7 @@ namespace QtAV::Wrapper {
 	{
 		return ctx_;
 	}
+
+	
 
 }
