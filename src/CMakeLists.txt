@@ -299,6 +299,7 @@ list(APPEND SOURCES
     codec/video/VideoEncoderFFmpeg.cpp
     VideoThread.cpp
     VideoFrameExtractor.cpp
+    AVWrapper.cpp
     )
 
 if(HAVE_OPENGL)
@@ -469,6 +470,7 @@ list(APPEND HEADERS ${SDK_HEADERS} ${SDK_PRIVATE_HEADERS}
     utils/internal.h
     output/OutputSet.h
     ColorTransform.h
+    AVWrapper.h
     )
 
 # TODO: rc template
