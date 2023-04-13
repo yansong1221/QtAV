@@ -374,7 +374,7 @@ bool VideoEncoderFFmpeg::encode(const VideoFrame &frame)
     pkt->data = (uint8_t*)d.buffer.constData();
     pkt->size = d.buffer.size();
     int got_packet = 0;
-    int ret = avcodec_encode_video2(d.avctx, &pkt, f.data(), &got_packet);
+    int ret = compat_encode(d.avctx, &pkt, &got_packet, f.data());
     if (ret < 0) {
         qWarning("error avcodec_encode_video2: %s" ,av_err2str(ret));
         return false; //false

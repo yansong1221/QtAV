@@ -94,10 +94,10 @@ bool AudioDecoderFFmpeg::decode(const Packet &packet)
     int ret = 0;
     if (packet.isEOF()) {
         Wrapper::AVPacketWrapper eofpkt;
-        ret = avcodec_decode_audio4(d.codec_ctx, &d.frame, &got_frame_ptr, &eofpkt);
+        ret = compat_decode(d.codec_ctx, &d.frame, &got_frame_ptr, &eofpkt);
     } else {
     // const AVPacket*: ffmpeg >= 1.0. no libav
-        ret = avcodec_decode_audio4(d.codec_ctx, &d.frame, &got_frame_ptr, (AVPacket*)packet.asAVPacket());
+        ret = compat_decode(d.codec_ctx, &d.frame, &got_frame_ptr, (AVPacket*)packet.asAVPacket());
     }
     d.undecoded_size = qMin(packet.data.size() - ret, packet.data.size());
     if (ret == AVERROR(EAGAIN)) {

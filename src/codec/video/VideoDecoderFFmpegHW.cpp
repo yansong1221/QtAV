@@ -113,7 +113,9 @@ static void ffmpeg_release_va_buffer(struct AVCodecContext *c, AVFrame *ff)
 bool VideoDecoderFFmpegHWPrivate::prepare()
 {
     //// From vlc begin
+#ifndef FF_API_THREAD_SAFE_CALLBACKS
     codec_ctx->thread_safe_callbacks = true; //?
+#endif
     codec_ctx->thread_count = threads;
 #ifdef _MSC_VER
 #pragma warning(disable:4065) //vc: switch has default but no case

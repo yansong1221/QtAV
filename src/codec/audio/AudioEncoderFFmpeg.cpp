@@ -204,7 +204,7 @@ bool AudioEncoderFFmpeg::encode(const AudioFrame &frame)
     pkt->data = (uint8_t*)d.buffer.constData(); //NULL
     pkt->size = d.buffer.size(); //0
     int got_packet = 0;
-    int ret = avcodec_encode_audio2(d.avctx, &pkt, &f, &got_packet);
+    int ret = compat_encode(d.avctx, &pkt, &got_packet, &f);
   
     if (ret < 0) {
         //qWarning("error avcodec_encode_audio2: %s" ,av_err2str(ret));

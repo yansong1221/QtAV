@@ -111,7 +111,6 @@ VideoDecoderFFmpegBase::VideoDecoderFFmpegBase(VideoDecoderFFmpegBasePrivate &d)
     VideoDecoder(d)
 {
 }
-
 bool VideoDecoderFFmpegBase::decode(const Packet &packet)
 {
     if (!isAvailable())
@@ -123,11 +122,12 @@ bool VideoDecoderFFmpegBase::decode(const Packet &packet)
     int ret = 0;
     if (packet.isEOF()) {
         Wrapper::AVPacketWrapper eofpkt;
-        ret = avcodec_decode_video2(d.codec_ctx, &d.frame, &got_frame_ptr, &eofpkt);
+        ret = compat_decode(d.codec_ctx, &d.frame, &got_frame_ptr, &eofpkt);
 
     } else {
-        ret = avcodec_decode_video2(d.codec_ctx, &d.frame, &got_frame_ptr, (AVPacket*)packet.asAVPacket());
+        ret = compat_decode(d.codec_ctx, &d.frame, &got_frame_ptr, (AVPacket*)packet.asAVPacket());
     }
+
     //qDebug("pic_type=%c", av_get_picture_type_char(d.frame->pict_type));
     d.undecoded_size = qMin(packet.data.size() - ret, packet.data.size());
     if (ret < 0) {
