@@ -436,7 +436,9 @@ if(HAVE_VAAPI)
   list(APPEND EXTRA_LIBS va X11)
 endif()
 
-if(NOT APPLE)
+
+find_package(CUDA)
+if(CUDA_FOUND)
   list(APPEND EXTRA_DEFS -DQTAV_HAVE_CUDA=1)
   list(APPEND EXTRA_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/cuda)
   list(APPEND SOURCES
@@ -445,6 +447,7 @@ if(NOT APPLE)
     codec/video/VideoDecoderCUDA.cpp
   )
 endif()
+
 
 list(APPEND HEADERS ${SDK_HEADERS} ${SDK_PRIVATE_HEADERS}
     AVPlayerPrivate.h

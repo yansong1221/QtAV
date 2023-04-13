@@ -31,11 +31,11 @@ extern ColorRange colorRangeFromFFmpeg(AVColorRange cr);
 
 static void SetColorDetailsByFFmpeg(VideoFrame *f, AVFrame* frame, AVCodecContext* codec_ctx)
 {
-    ColorSpace cs = colorSpaceFromFFmpeg(av_frame_get_colorspace(frame));
+    ColorSpace cs = colorSpaceFromFFmpeg(frame->colorspace);
     if (cs == ColorSpace_Unknown)
         cs = colorSpaceFromFFmpeg(codec_ctx->colorspace);
     f->setColorSpace(cs);
-    ColorRange cr = colorRangeFromFFmpeg(av_frame_get_color_range(frame));
+    ColorRange cr = colorRangeFromFFmpeg(frame->color_range);
     if (cr == ColorRange_Unknown) {
         // check yuvj format. TODO: deprecated, check only for old ffmpeg?
         const AVPixelFormat pixfmt = (AVPixelFormat)frame->format;

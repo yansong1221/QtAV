@@ -476,6 +476,14 @@ const char *get_codec_long_name(AVCodecID id);
 #define AV_INPUT_BUFFER_PADDING_SIZE FF_INPUT_BUFFER_PADDING_SIZE
 #endif
 
+#ifndef ff_const59
+#if FF_API_AVIOFORMAT
+#define ff_const59
+#else
+#define ff_const59 const
+#endif
+#endif // !ff_const59
+
 int compat_decode(AVCodecContext* avctx, AVFrame* frame, int* got_frame, const AVPacket* pkt);
 int compat_encode(AVCodecContext* avctx, AVPacket* avpkt,
     int* got_packet, const AVFrame* frame);

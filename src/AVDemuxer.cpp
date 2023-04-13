@@ -292,7 +292,7 @@ public:
     //copy the info, not parse the file when constructed, then need member vars
     QString file;
     QString file_orig;
-    AVInputFormat *input_format;
+    ff_const59 AVInputFormat *input_format;
     QString format_forced;
     MediaIO *input;
 
