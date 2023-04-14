@@ -54,19 +54,20 @@ endif()
 
 if(FFMPEG_AVRESAMPLE_FOUND)
   list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVRESAMPLE=1)
-  list(APPEND EXTRA_DEFS -DBUILD_AVR)  
+  list(APPEND EXTRA_DEFS -DBUILD_AVR)
+  list(APPEND SOURCES AudioResamplerLibav.cpp)  
 endif()
 
 if(FFMPEG_SWRESAMPLE_FOUND)
   list(APPEND EXTRA_DEFS -DQTAV_HAVE_SWRESAMPLE=1)
-  list(APPEND EXTRA_DEFS -DBUILD_SWR)  
+  list(APPEND EXTRA_DEFS -DBUILD_SWR)
+  list(APPEND SOURCES AudioResamplerFF.cpp)  
 endif()
 
 if (NOT FFMPEG_AVRESAMPLE_FOUND AND NOT FFMPEG_SWRESAMPLE_FOUND)
     message(FATAL_ERROR "libswresample or libavresample is required")
 endif()
-
-
+  
 list(APPEND EXTRA_DEFS -DBUILD_QTAV_LIB -D__STDC_CONSTANT_MACROS)
 
 check_include_file(ass/ass.h HAVE_ASS_H)
@@ -181,13 +182,6 @@ foreach (D ${DEP_H})
     ADD_DEFINITIONS(-DQTAV_HAVE_${D}=1)
   endif()
 endforeach()
-
-if (AVRESAMPLE_FOUND)
-  list(APPEND SOURCES AudioResamplerLibav.cpp)
-endif()
-if (SWRESAMPLE_FOUND)
-  list(APPEND SOURCES AudioResamplerFF.cpp)
-endif()
 
 set(HAVE_EGL 0)
 set(DYNAMIC_GL 0)
