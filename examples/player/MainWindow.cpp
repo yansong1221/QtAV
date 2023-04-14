@@ -614,7 +614,7 @@ void MainWindow::changeAudioTrack(QAction *action)
     mpAudioTrackAction = action;
     mpAudioTrackAction->setChecked(true);
     if (mpStatisticsView && mpStatisticsView->isVisible())
-        mpStatisticsView->setStatistics(mpPlayer->statistics());
+        mpStatisticsView->setStatistics();
 }
 
 void MainWindow::changeVO(QAction *action)
@@ -868,7 +868,7 @@ void MainWindow::onStartPlay()
     updateChannelMenu();
 
     if (mpStatisticsView && mpStatisticsView->isVisible())
-        mpStatisticsView->setStatistics(mpPlayer->statistics());
+        mpStatisticsView->setStatistics();
 }
 
 void MainWindow::onStopPlay()
@@ -1310,9 +1310,9 @@ void MainWindow::tryShowControlBar()
 void MainWindow::showInfo()
 {
     if (!mpStatisticsView)
-        mpStatisticsView = new StatisticsView();
+        mpStatisticsView = new StatisticsView(*mpPlayer,this);
     if (mpPlayer)
-        mpStatisticsView->setStatistics(mpPlayer->statistics());
+        mpStatisticsView->setStatistics();
     mpStatisticsView->show();
 }
 

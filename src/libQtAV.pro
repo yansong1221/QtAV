@@ -1,7 +1,9 @@
 TEMPLATE = lib
+CONFIG += staticlib
 MODULE_INCNAME = QtAV # for mac framework. also used in install_sdk.pro
 TARGET = QtAV
-QT += core gui
+QT += core gui quick qml
+CONFIG += c++17
 #CONFIG *= ltcg
 greaterThan(QT_MAJOR_VERSION, 5): QT += opengl
 greaterThan(QT_MAJOR_VERSION, 4) {
@@ -17,6 +19,8 @@ greaterThan(QT_MAJOR_VERSION, 4) {
 CONFIG *= qtav-buildlib
 static: CONFIG *= static_ffmpeg
 INCLUDEPATH += $$[QT_INSTALL_HEADERS] # TODO: ffmpeg dir
+
+#include(../runSdkInstall.pri)
 
 #mac: simd.prf will load qt_build_config and the result is soname will prefixed with QT_INSTALL_LIBS and link flag will append soname after QMAKE_LFLAGS_SONAME
 config_libcedarv: CONFIG *= neon config_simd #need by qt4 addSimdCompiler(). neon or config_neon is required because tests/arch can not detect neon
@@ -660,4 +664,37 @@ MODULE_VERSION = $$VERSION
 #use Qt version. limited by qmake
 # windows: Qt5AV.dll, not Qt1AV.dll
 !mac_framework: MODULE_VERSION = $${QT_MAJOR_VERSION}.$${QT_MINOR_VERSION}.$${QT_PATCH_VERSION}
-!contains(QMAKE_HOST.os, Windows):include($$PROJECTROOT/deploy.pri)
+#!contains(QMAKE_HOST.os, Windows):include($$PROJECTROOT/deploy.pri)
+
+
+SOURCES += \
+    ../qml/plugin.cpp \
+    ../qml/QQuickItemRenderer.cpp \
+    ../qml/SGVideoNode.cpp \
+    ../qml/QmlAVPlayer.cpp \
+    ../qml/QuickFilter.cpp \
+    ../qml/QuickSubtitle.cpp \
+    ../qml/MediaMetaData.cpp \
+    ../qml/QuickSubtitleItem.cpp \
+    ../qml/QuickVideoPreview.cpp
+
+HEADERS += \
+    ../qml/QmlAV/QuickSubtitle.h \
+    ../qml/QmlAV/QuickSubtitleItem.h \
+    ../qml/QmlAV/QuickVideoPreview.h \
+    ../qml/QmlAV/QmlAVPlayer.h \
+    ../qml/QmlAV/Export.h \
+    ../qml/QmlAV/MediaMetaData.h \
+    ../qml/QmlAV/QQuickItemRenderer.h \
+    ../qml/QmlAV/QuickFilter.h \
+    ../qml/QmlAV/SGVideoNode.h \
+
+greaterThan(QT_MINOR_VERSION, 1) {
+  HEADERS += ../qml/QmlAV/QuickFBORenderer.h
+  SOURCES += ../qml/QuickFBORenderer.cpp
+}
+
+INCLUDEPATH += $$PWD/../qml
+DEPENDPATH += $$PWD/../qml
+INCLUDEPATH += $$PWD/../qml/QmlAV
+DEPENDPATH += $$PWD/../qml/QmlAV

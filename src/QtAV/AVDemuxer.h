@@ -27,6 +27,7 @@
 #include <QtCore/QVariant>
 #include <QtCore/QObject>
 #include <QtCore/QScopedPointer>
+#include <QMutex>
 
 struct AVFormatContext;
 struct AVCodecContext;
@@ -194,9 +195,10 @@ Q_SIGNALS:
     /*emit when the first frame is read*/
     void started();
     void finished(); //end of file
-    void error(const QtAV::AVError& e); //explictly use QtAV::AVError in connection for Qt4 syntax
+    void error(const QtAV::AVError& e, int ffmpegError = 0, const QString& ffmpegErrorStr=""); //explictly use QtAV::AVError in connection for Qt4 syntax
     void mediaStatusChanged(QtAV::MediaStatus status);
     void seekableChanged();
+    void recordFinished(bool success, const QString& format);
 private:
     void setMediaStatus(MediaStatus status);
     // error code (errorCode) and message (msg) may be modified internally
@@ -206,6 +208,24 @@ private:
     QScopedPointer<Private> d;
     class InterruptHandler;
     friend class InterruptHandler;
+
+public:
+    bool startRecording(const QString& filePath, int duration = -1);
+    bool stopRecording(const QString &filePath = "");
+
+    quint64 totalBandwidth = 0;
+    quint64 totalVideoBandwidth = 0;
+    quint64 totalAudioBandwidth = 0;
+    quint64 totalKeyFrameSize = 0;
+    quint64 totalPFrameSize = 0;
+    qint64 totalPackets = 0;
+    qint64 totalVideoPackets = 0;
+    qint64 totalAudioPackets = 0;
+    qint64 lostFrames = 0;
+    int audioStreamIndex = -1;
+    QString containerFormat;
+    QMutex mutex;
+    std::atomic<bool> resetValues{true};
 };
 
 } //namespace QtAV

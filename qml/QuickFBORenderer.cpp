@@ -137,7 +137,7 @@ bool QuickFBORenderer::receiveFrame(const VideoFrame &frame)
     d.frame_changed = true;
 //    update();  // why update slow? because of calling in a different thread?
     //QMetaObject::invokeMethod(this, "update"); // slower than directly postEvent
-    QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+    QCoreApplication::postEvent(this, new QEvent(QEvent::User), INT_MAX);
     return true;
 }
 
@@ -160,7 +160,11 @@ void QuickFBORenderer::setSource(QObject *source)
             p0 = qp0->player();
     }
     if(p0)
+    {
         p0->removeVideoRenderer(this);
+        if(!(p0->mediaEndAction() & MediaEndAction_KeepDisplay) && p0->file().isEmpty())
+            receive(VideoFrame());
+    }
 
     d.source = source;
     Q_EMIT sourceChanged();

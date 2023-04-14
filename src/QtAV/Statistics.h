@@ -26,6 +26,8 @@
 #include <QtCore/QHash>
 #include <QtCore/QTime>
 #include <QtCore/QSharedData>
+#include <QSize>
+#include <QMutex>
 
 /*!
  * values from functions are dynamically calculated
@@ -113,6 +115,20 @@ public:
         class Private;
         QExplicitlySharedDataPointer<Private> d;
     } video_only;
+
+    double bandwidthRate = 0;
+    double videoBandwidthRate = 0;
+    double audioBandwidthRate = 0;
+    double fps = 0;
+    double displayFPS = 0;
+    qint64 totalFrames = 0;
+    qint64 droppedPackets = 0;
+    qint64 droppedFrames = 0;
+    qint64 totalKeyFrames = -3;
+    QSize realResolution = QSize(0,0);
+    int imageBufferSize = 0;
+    QMutex mutex;
+    std::atomic<bool> resetValues{true};
 };
 
 } //namespace QtAV

@@ -55,7 +55,7 @@ public:
         if (!isRunning())
             return;
         scheduleStop();
-        wait();
+        wait(10000);
     }
 
     unsigned long timeout_ms;
@@ -97,6 +97,7 @@ public:
 
 protected:
     virtual void run() {
+        setTerminationEnabled(true);
         while (!stop) {
             QRunnable *task = tasks.take();
             if (task) {
@@ -157,7 +158,9 @@ public:
     }
     ~VideoFrameExtractorPrivate() {
         // stop first before demuxer and decoder close to avoid running new seek task after demuxer is closed.
+        abort_seek = true;
         thread.waitStop();
+        thread.terminate();
         releaseResourceInternal();
     }
     bool checkAndOpen() {
@@ -519,6 +522,12 @@ void VideoFrameExtractor::extract()
     // Note if seek/decode is aborted, aborted() signal will be emitted.
     d.abort_seek = true;
     d.thread.addTask(new ExtractTask(this, position()));
+}
+
+void VideoFrameExtractor::abort()
+{
+    DPTR_D(VideoFrameExtractor);
+    d.abort_seek = true;
 }
 
 void VideoFrameExtractor::extractInternal(qint64 pos)

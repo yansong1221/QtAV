@@ -448,7 +448,6 @@ if(CUDA_FOUND)
   )
 endif()
 
-
 list(APPEND HEADERS ${SDK_HEADERS} ${SDK_PRIVATE_HEADERS}
     AVPlayerPrivate.h
     AVDemuxThread.h

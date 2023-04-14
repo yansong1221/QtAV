@@ -8,7 +8,6 @@ if (WIN32)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -18,7 +17,7 @@ set(QTAV_PATCH 0)
 set(PROJECT_VERSION ${QTAV_MAJOR}.${QTAV_MINOR}.${QTAV_PATCH})
 set(SO_VERSION ${QTAV_MAJOR})
 
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if(POLICY CMP0063) # visibility. since 3.3
@@ -29,7 +28,6 @@ if(POLICY CMP0071)
 endif()
 set(CMAKE_CXX_VISIBILITY_PRESET hidden) #use with -fdata-sections -ffunction-sections to reduce target size
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
-
 
 
 option(BUILD_EXAMPLES "Build examples" ON)

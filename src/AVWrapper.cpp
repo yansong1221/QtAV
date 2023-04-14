@@ -18,8 +18,15 @@ namespace QtAV::Wrapper {
 	}
 
 	AVPacketWrapper::AVPacketWrapper(const AVPacketWrapper& other)
+		: AVPacketWrapper()
 	{
 		*this = other;
+	}
+
+	AVPacketWrapper::AVPacketWrapper(const AVPacket* packet)
+		:packet_(::av_packet_clone(packet))
+	{
+
 	}
 
 	AVPacketWrapper::~AVPacketWrapper()
@@ -52,6 +59,9 @@ namespace QtAV::Wrapper {
 		if (this == std::addressof(other))
 			return *this;
 
+		//this->~AVPacketWrapper();
+		
+		//packet_ = ::av_packet_clone(other.data());
 		av_packet_unref(packet_);
 		av_packet_ref(packet_, other.data());
 		return *this;
@@ -60,6 +70,14 @@ namespace QtAV::Wrapper {
 	::AVPacket* AVPacketWrapper::operator->() const
 	{
 		return packet_;
+	}
+
+	int AVPacketWrapper::calculatePacketSize() const
+	{
+		auto dataSize = packet_->size;
+		for (auto i = 0; i < packet_->side_data_elems; ++i)
+			dataSize += packet_->side_data[i].size;
+		return dataSize;	
 	}
 
 	AVFrameWapper::AVFrameWapper()

@@ -10,7 +10,9 @@ namespace QtAV::Wrapper {
 	class AVPacketWrapper {
 	public:
 		AVPacketWrapper();
+		AVPacketWrapper(const AVPacket* packet);
 		~AVPacketWrapper();
+		
 	public:
 		AVPacketWrapper(const AVPacketWrapper& other);
 		AVPacketWrapper& operator=(const AVPacketWrapper& other);
@@ -22,6 +24,8 @@ namespace QtAV::Wrapper {
 		::AVPacket* data();
 
 		::AVPacket* operator->() const;
+
+		int calculatePacketSize() const;
 	private:
 		::AVPacket* packet_;
 	};

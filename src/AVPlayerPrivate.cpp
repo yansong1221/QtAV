@@ -35,6 +35,7 @@ extern "C" {
 }
 #endif
 #include "utils/Logger.h"
+#include <QUrl>
 
 namespace QtAV {
 
@@ -69,7 +70,7 @@ static bool correct_audio_channels(AVCodecContext *ctx) {
     return ctx->channel_layout > 0 && ctx->channels > 0;
 }
 
-AVPlayer::Private::Private()
+AVPlayer::Private::Private(AVPlayer *player)
     : auto_load(false)
     , async_load(true)
     , loaded(false)
@@ -108,12 +109,14 @@ AVPlayer::Private::Private()
     , seek_type(AccurateSeek)
     , interrupt_timeout(30000)
     , force_fps(0)
+    , realtimeDecode{false}
     , notify_interval(-500)
     , status(NoMedia)
     , state(AVPlayer::StoppedState)
     , end_action(MediaEndAction_Default)
     , last_known_good_pts(0)
     , was_stepping(false)
+    ,q(player)
 {
     demuxer.setInterruptTimeout(interrupt_timeout);
     /*
@@ -121,6 +124,8 @@ AVPlayer::Private::Private()
      * must be the same value at the end of stop(), and must be different from value in
      * stopFromDemuxerThread()(which is false), so the initial value must be true
      */
+
+    mediaDataTimer.setInterval(1000);
 
     vc_ids
 #if QTAV_HAVE(DXVA)
@@ -377,7 +382,7 @@ bool AVPlayer::Private::setupAudioThread(AVPlayer *player)
         qWarning("failed to create audio decoder");
         return false;
     }
-    QObject::connect(adec, SIGNAL(error(QtAV::AVError)), player, SIGNAL(error(QtAV::AVError)));
+    QObject::connect(adec, &AudioDecoder::error, player, &AVPlayer::error);
     adec->setCodecContext(avctx);
     adec->setOptions(ac_opt);
     if (!adec->open()) {
@@ -562,7 +567,7 @@ bool AVPlayer::Private::tryApplyDecoderPriority(AVPlayer *player)
     if (vdec)
         delete vdec;
     vdec = vd;
-    QObject::connect(vdec, SIGNAL(error(QtAV::AVError)), player, SIGNAL(error(QtAV::AVError)));
+    QObject::connect(vdec, &VideoDecoder::error, player, &AVPlayer::error);
     initVideoStatistics(demuxer.videoStream());
     // If no seek, drop packets until a key frame packet is found. But we may drop too many packets, and also a/v sync is a problem.
     player->setPosition(pos);
@@ -610,7 +615,7 @@ bool AVPlayer::Private::setupVideoThread(AVPlayer *player)
         emit player->error(e);
         return false;
     }
-    QObject::connect(vdec, SIGNAL(error(QtAV::AVError)), player, SIGNAL(error(QtAV::AVError)));
+    QObject::connect(vdec, &VideoDecoder::error, player, &AVPlayer::error);
     if (!vthread) {
         vthread = new VideoThread(player);
         vthread->setClock(clock);
@@ -672,6 +677,179 @@ void AVPlayer::Private::updateBufferValue()
         updateBufferValue(athread->packetQueue());
     if (vthread)
         updateBufferValue(vthread->packetQueue());
+}
+
+bool AVPlayer::Private::calcRates()
+{
+    if(!elapsedTimer.isValid())
+    {
+        elapsedTimer.start();
+        demuxer.mutex.lock();
+        lastTotalBandwidth = demuxer.totalBandwidth;
+        lastTotalVideoBandwidth = demuxer.totalVideoBandwidth;
+        lastTotalAudioBandwidth = demuxer.totalAudioBandwidth;
+        demuxer.mutex.unlock();
+        statistics.mutex.lock();
+        lastTotalFrames = statistics.totalFrames;
+        statistics.mutex.unlock();
+        calc_count = 0;
+        return false;
+    }
+
+    auto elapsed = elapsedTimer.elapsed();
+    if(elapsed>(mediaDataTimer.interval()/2))
+        elapsedTimer.start();
+    else
+        return false;
+
+
+    double alpha = calc_count>0 ? 0.333 : 1.0;
+    demuxer.mutex.lock();
+    auto val = (static_cast<double>(demuxer.totalBandwidth-lastTotalBandwidth)/elapsed)*1000;
+    lastTotalBandwidth = demuxer.totalBandwidth;
+    statistics.bandwidthRate = (alpha * val) + (1.0 - alpha) * statistics.bandwidthRate;
+
+    val = (static_cast<double>(demuxer.totalVideoBandwidth-lastTotalVideoBandwidth)/elapsed)*1000;
+    lastTotalVideoBandwidth = demuxer.totalVideoBandwidth;
+    statistics.videoBandwidthRate = (alpha * val) + (1.0 - alpha) * statistics.videoBandwidthRate;
+
+    val = (static_cast<double>(demuxer.totalAudioBandwidth-lastTotalAudioBandwidth)/elapsed)*1000;
+    lastTotalAudioBandwidth = demuxer.totalAudioBandwidth;
+    statistics.audioBandwidthRate = (alpha * val) + (1.0 - alpha) * statistics.audioBandwidthRate;
+    demuxer.mutex.unlock();
+
+    statistics.mutex.lock();
+    val = (static_cast<double>(statistics.totalFrames-lastTotalFrames)/elapsed)*1000;
+    lastTotalFrames = statistics.totalFrames;
+    statistics.fps = (alpha * val) + (1.0 - alpha) * statistics.fps;
+    statistics.mutex.unlock();
+
+    ++calc_count;
+
+    return true;
+}
+
+void AVPlayer::Private::initMediaData()
+{
+    mediaData["bandwidthRate"] = 0;
+    mediaData["videoBandwidthRate"] = 0;
+    mediaData["audioBandwidthRate"] = 0;
+    mediaData["fps"] = 0;
+    mediaData["displayFPS"] = 0;
+    mediaData["totalBandwidth"] = 0;
+    mediaData["totalVideoBandwidth"] = 0;
+    mediaData["totalAudioBandwidth"] = 0;
+    mediaData["totalKeyFrameSize"] = 0;
+    mediaData["totalPFrameSize"] = 0;
+    mediaData["totalPackets"] = 0;
+    mediaData["totalVideoPackets"] = 0;
+    mediaData["totalAudioPackets"] = 0;
+    mediaData["totalFrames"] = 0;
+    mediaData["droppedPackets"] = 0;
+    mediaData["droppedFrames"] = 0;
+    mediaData["lostFrames"] = 0;
+    mediaData["totalKeyFrames"] = 0;
+    mediaData["averageFps"] = 0;
+    mediaData["averageBandwidth"] = 0;
+    mediaData["averageVideoBandwidth"] = 0;
+    mediaData["averageAudioBandwidth"] = 0;
+    mediaData["realResolution"] = QSize(0,0);
+    mediaData["connected"] = false;
+    mediaData["protocol"] = "";
+    mediaData["imageBufferSize"] = 0;
+    mediaData["decoder"] = "";
+    mediaData["decoderDetails"] = "";
+    mediaData["containerFormat"] = "";
+}
+
+void AVPlayer::Private::updateMediaData()
+{
+    mediaData["connected"] = true;
+    if(QUrl::fromUserInput(q->file()).isLocalFile())
+        mediaData["protocol"] = "File";
+    else
+        mediaData["protocol"] = q->file().mid(0,q->file().indexOf(":")).toUpper();
+    mediaData["decoder"] = statistics.video.decoder;
+    mediaData["decoderDetails"] = statistics.video.decoder_detail;
+    demuxer.mutex.lock();
+    mediaData["containerFormat"] = demuxer.containerFormat;
+    demuxer.mutex.unlock();
+    statistics.mutex.lock();
+    mediaData["realResolution"] = statistics.realResolution;
+    mediaData["imageBufferSize"] = statistics.imageBufferSize;
+    statistics.mutex.unlock();
+
+    if(!calcRates())
+        return;
+
+    statistics.mutex.lock();
+    mediaData["bandwidthRate"] = statistics.bandwidthRate;
+    mediaData["videoBandwidthRate"] = statistics.videoBandwidthRate;
+    mediaData["audioBandwidthRate"] = statistics.audioBandwidthRate;
+    mediaData["fps"] = statistics.fps;
+    mediaData["displayFPS"] = statistics.displayFPS;
+    mediaData["totalFrames"] = statistics.totalFrames;
+    mediaData["droppedPackets"] = statistics.droppedPackets;
+    mediaData["droppedFrames"] = statistics.droppedFrames;
+    mediaData["totalKeyFrames"] = statistics.totalKeyFrames;
+    mediaData["imageBufferSize"] = statistics.imageBufferSize;
+    statistics.mutex.unlock();
+
+    demuxer.mutex.lock();
+    mediaData["totalBandwidth"] = demuxer.totalBandwidth;
+    mediaData["totalVideoBandwidth"] = demuxer.totalVideoBandwidth;
+    mediaData["totalAudioBandwidth"] = demuxer.totalAudioBandwidth;
+    mediaData["totalKeyFrameSize"] = demuxer.totalKeyFrameSize;
+    mediaData["totalPFrameSize"] = demuxer.totalPFrameSize;
+    mediaData["totalPackets"] = demuxer.totalPackets;
+    mediaData["totalVideoPackets"] = demuxer.totalVideoPackets;
+    mediaData["totalAudioPackets"] = demuxer.totalAudioPackets;
+    mediaData["lostFrames"] = demuxer.lostFrames;
+    demuxer.mutex.unlock();
+
+    auto totalElapsed = totalElapsedTimer.elapsed();
+    if(totalElapsed>0)
+    {
+        mediaData["averageFps"] = (static_cast<double>(statistics.totalFrames)/totalElapsed)*1000;
+        mediaData["averageBandwidth"] = (static_cast<double>(demuxer.totalBandwidth)/totalElapsed)*1000;
+        mediaData["averageVideoBandwidth"] = (static_cast<double>(demuxer.totalVideoBandwidth)/totalElapsed)*1000;
+        mediaData["averageAudioBandwidth"] = (static_cast<double>(demuxer.totalAudioBandwidth)/totalElapsed)*1000;
+    }
+    emit q->mediaDataTimerTriggered(mediaData);
+}
+
+void AVPlayer::Private::applyMediaDataCalculation()
+{
+    initMediaData();
+
+    connect(q,&AVPlayer::sourceChanged, [this](){
+       mediaData["connected"] = false;
+       elapsedTimer.invalidate();
+       if(mediaDataTimer.interval()  < 1000000000)
+            statistics.resetValues.store(true);
+    });
+
+    connect(q,&AVPlayer::stopped,[this](){
+        mediaData["connected"] = false;
+    });
+
+    connect(q,&AVPlayer::firstKeyFrameReceived,[this](){
+        if(mediaDataTimer.interval() >= 1000000000)
+            return;
+        demuxer.resetValues.store(true);
+        lastTotalBandwidth = 0;
+        lastTotalVideoBandwidth = 0;
+        lastTotalAudioBandwidth = 0;
+        lastTotalFrames = 0;
+        mediaData["connected"] = true;
+        elapsedTimer.invalidate();
+        totalElapsedTimer.start();
+        mediaDataTimer.start();
+        emit q->mediaDataTimerStarted();
+    });
+    connect(&mediaDataTimer, &QTimer::timeout, [this]() {
+        updateMediaData();
+    });
 }
 
 } //namespace QtAV
