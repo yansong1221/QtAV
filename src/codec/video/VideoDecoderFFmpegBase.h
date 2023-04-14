@@ -60,7 +60,6 @@ public:
 
     }
     void updateColorDetails(VideoFrame* f);
-    qreal getDAR(AVFrame *f);
 
     Wrapper::AVFrameWapper frame; //set once and not change
     int width, height; //The current decoded frame size

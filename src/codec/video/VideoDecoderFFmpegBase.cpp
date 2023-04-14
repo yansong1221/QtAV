@@ -93,20 +93,6 @@ void VideoDecoderFFmpegBasePrivate::updateColorDetails(VideoFrame *f)
     }
 }
 
-qreal VideoDecoderFFmpegBasePrivate::getDAR(AVFrame *f)
-{
-    // lavf 54.5.100 av_guess_sample_aspect_ratio: stream.sar > frame.sar
-    qreal dar = 0;
-    if (f->height > 0)
-        dar = (qreal)f->width/(qreal)f->height;
-    // prefer sar from AVFrame if sar != 1/1
-    if (f->sample_aspect_ratio.num > 1)
-        dar *= av_q2d(f->sample_aspect_ratio);
-    else if (codec_ctx && codec_ctx->sample_aspect_ratio.num > 1) // skip 1/1
-        dar *= av_q2d(codec_ctx->sample_aspect_ratio);
-    return dar;
-}
-
 VideoDecoderFFmpegBase::VideoDecoderFFmpegBase(VideoDecoderFFmpegBasePrivate &d):
     VideoDecoder(d)
 {
@@ -154,7 +140,7 @@ VideoFrame VideoDecoderFFmpegBase::frame()
         return VideoFrame();
     // it's safe if width, height, pixfmt will not change, only data change
     VideoFrame frame(d.frame->width, d.frame->height, VideoFormat((int)d.codec_ctx->pix_fmt));
-    frame.setDisplayAspectRatio(d.getDAR(&d.frame));
+    frame.setDisplayAspectRatio(d.frame.getDAR(d.codec_ctx));
     frame.setBits(d.frame->data);
     frame.setBytesPerLine(d.frame->linesize);
     // in s. TODO: what about AVFrame.pts? av_frame_get_best_effort_timestamp? move to VideoFrame::from(AVFrame*)

@@ -24,7 +24,7 @@ namespace QtAV::Wrapper {
 	}
 
 	AVPacketWrapper::AVPacketWrapper(const AVPacket* packet)
-		:packet_(::av_packet_clone(packet))
+		: packet_(::av_packet_clone(packet))
 	{
 
 	}
@@ -59,9 +59,6 @@ namespace QtAV::Wrapper {
 		if (this == std::addressof(other))
 			return *this;
 
-		//this->~AVPacketWrapper();
-		
-		//packet_ = ::av_packet_clone(other.data());
 		av_packet_unref(packet_);
 		av_packet_ref(packet_, other.data());
 		return *this;
@@ -77,18 +74,79 @@ namespace QtAV::Wrapper {
 		auto dataSize = packet_->size;
 		for (auto i = 0; i < packet_->side_data_elems; ++i)
 			dataSize += packet_->side_data[i].size;
-		return dataSize;	
+		return dataSize;
 	}
 
 	AVFrameWapper::AVFrameWapper()
 		:frame_(av_frame_alloc())
 	{
+		
+	}
 
+	AVFrameWapper::AVFrameWapper(const AVFrame* frame)
+		: frame_(::av_frame_clone(frame))
+	{
+
+	}
+
+	AVFrameWapper::AVFrameWapper(const AVFrameWapper& other)
+		: AVFrameWapper()
+	{
+		*this = other;
+	}
+
+	AVFrameWapper::AVFrameWapper(AVFrameWapper&& other)
+		: AVFrameWapper()
+	{
+		*this = std::move(other);
 	}
 
 	AVFrameWapper::~AVFrameWapper()
 	{
 		av_frame_free(&frame_);
+	}
+
+	qreal AVFrameWapper::getDAR(const AVCodecContext* codec_ctx) const
+	{
+		// lavf 54.5.100 av_guess_sample_aspect_ratio: stream.sar > frame.sar
+		qreal dar = 0;
+		if (frame_->height > 0)
+			dar = (qreal)frame_->width / (qreal)frame_->height;
+		// prefer sar from AVFrame if sar != 1/1
+		if (frame_->sample_aspect_ratio.num > 1)
+			dar *= av_q2d(frame_->sample_aspect_ratio);
+		else if (codec_ctx && codec_ctx->sample_aspect_ratio.num > 1) // skip 1/1
+			dar *= av_q2d(codec_ctx->sample_aspect_ratio);
+		return dar;
+	}
+
+	qreal AVFrameWapper::timestamp() const
+	{
+		return double(frame_->pts) / 1000.0;
+	}
+
+	AVFrameWapper& AVFrameWapper::operator=(const AVFrameWapper& other)
+	{
+		if (this == std::addressof(other))
+			return *this;
+		av_frame_unref(frame_);
+		av_frame_ref(frame_, other.data());
+		return *this;
+	}
+
+	AVFrameWapper& AVFrameWapper::operator=(AVFrameWapper&& other)
+	{
+		if (this == std::addressof(other))
+			return *this;
+		av_frame_unref(frame_);
+		av_frame_move_ref(frame_, other.data());
+		return *this;
+	}
+
+	void AVFrameWapper::reset()
+	{
+		av_frame_free(&frame_);
+		frame_ = av_frame_alloc();
 	}
 
 	AVCodecContextWrapper::AVCodecContextWrapper()
@@ -121,6 +179,6 @@ namespace QtAV::Wrapper {
 		return ctx_;
 	}
 
-	
+
 
 }

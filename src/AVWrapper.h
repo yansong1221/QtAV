@@ -1,4 +1,5 @@
 #pragma once
+#include <QtGlobal>
 
 struct AVFrame;
 struct AVPacket;
@@ -34,8 +35,15 @@ namespace QtAV::Wrapper {
 	{
 	public:
 		AVFrameWapper();
+		AVFrameWapper(const AVFrame* frame);
 		~AVFrameWapper();
 	public:
+
+		AVFrameWapper(const AVFrameWapper& other);
+		AVFrameWapper(AVFrameWapper&& other);
+		AVFrameWapper& operator=(const AVFrameWapper& other);
+		AVFrameWapper& operator=(AVFrameWapper&& other);
+
 		const AVFrame* data() const { return frame_; }
 		AVFrame* data() { return frame_; }
 
@@ -43,6 +51,11 @@ namespace QtAV::Wrapper {
 		AVFrame* operator&() { return frame_; }
 
 		AVFrame* operator->() const { return frame_; }
+
+		qreal getDAR(const AVCodecContext* codec_ctx) const;
+		qreal timestamp() const;
+
+		void reset();
 	private:
 		AVFrame* frame_;
 	};

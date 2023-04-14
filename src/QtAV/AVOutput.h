@@ -38,9 +38,8 @@ class Statistics;
 class OutputSet;
 class Q_AV_EXPORT AVOutput
 {
-public:
     DPTR_DECLARE_PRIVATE(AVOutput)
-
+public:
     AVOutput();
     virtual ~AVOutput();
     bool isAvailable() const;

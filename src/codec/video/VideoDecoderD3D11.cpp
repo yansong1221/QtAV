@@ -187,8 +187,8 @@ VideoFrame VideoDecoderD3D11::frame()
             f.setBytesPerLine(fmt.bytesPerLine(d.width, i), i); //used by gl to compute texture size
         }
         f.setMetaData(QStringLiteral("surface_interop"), QVariant::fromValue(VideoSurfaceInteropPtr(interop)));
-        f.setTimestamp(d.frame->pts/1000.0);
-        f.setDisplayAspectRatio(d.getDAR(&d.frame));
+        f.setTimestamp(d.frame.timestamp());
+        f.setDisplayAspectRatio(d.frame.getDAR(d.codec_ctx));
         return f;
     }
 //    qDebug("process for view: %p, texture: %p", surface, texture.Get());

@@ -115,6 +115,7 @@ public:
     }
     virtual ~VideoDecoderDXVAPrivate() // can not unload dlls because dx resource will be released in VideoDecoderD3DPrivate::close
     {
+        this->frame.reset();
         unloadDll();
     }
     AVPixelFormat vaPixelFormat() const Q_DECL_OVERRIDE { return QTAV_PIX_FMT_C(DXVA2_VLD);}
@@ -190,8 +191,8 @@ VideoFrame VideoDecoderDXVA::frame()
         VideoFrame f(d.width, d.height, VideoFormat::Format_RGB32);
         f.setBytesPerLine(d.width * 4); //used by gl to compute texture size
         f.setMetaData(QStringLiteral("surface_interop"), QVariant::fromValue(VideoSurfaceInteropPtr(interop)));
-        f.setTimestamp(d.frame->pts/1000.0);
-        f.setDisplayAspectRatio(d.getDAR(&d.frame));
+        f.setTimestamp(d.frame.timestamp());
+        f.setDisplayAspectRatio(d.frame.getDAR(d.codec_ctx));
         return f;
     }
     class ScopedD3DLock {

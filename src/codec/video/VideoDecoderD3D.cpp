@@ -321,6 +321,11 @@ VideoDecoderD3DPrivate::VideoDecoderD3DPrivate()
 {
 }
 
+VideoDecoderD3DPrivate::~VideoDecoderD3DPrivate()
+{
+    this->frame.reset();
+}
+
 bool VideoDecoderD3DPrivate::open()
 {
     if (!prepare())
