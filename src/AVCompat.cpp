@@ -451,5 +451,32 @@ int compat_decode(AVCodecContext* avctx, AVFrame* frame, int* got_frame, const A
 int compat_encode(AVCodecContext* avctx, AVPacket* avpkt,
     int* got_packet, const AVFrame* frame)
 {
-    return AVERROR_BUG;
+    //AVPacket user_pkt;
+	int ret = 0;
+	*got_packet = 0;
+
+    ret = avcodec_send_frame(avctx, frame);
+    if (ret == AVERROR_EOF)
+        ret = 0;
+    else if (ret == AVERROR(EAGAIN)) {
+        /* we fully drain all the output in each encode call, so this should not
+         * ever happen */
+        return AVERROR_BUG;
+    }
+    else if (ret < 0)
+        return ret;
+
+    //av_packet_move_ref(&user_pkt, avpkt);
+
+	ret = avcodec_receive_packet(avctx, avpkt);
+	if (ret == 0) {
+        *got_packet = 1;
+        return ret;	
+	}
+    else
+    {
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+            ret = 0;    
+        return ret;
+    }
 }
