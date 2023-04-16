@@ -157,34 +157,22 @@ void AVDecoder::flush()
  * do nothing if equal
  * close the old one. the codec context can not be shared in more than 1 decoder.
  */
-void AVDecoder::setCodecContext(void *codecCtx)
+void AVDecoder::setCodecContext(const AVCodecContext* codecCtx)
 {
     DPTR_D(AVDecoder);
-    AVCodecContext *ctx = (AVCodecContext*)codecCtx;
-    if (d.codec_ctx == ctx)
+
+    if (d.codec_ctx == codecCtx)
         return;
     if (isOpen()) {
         qWarning("Can not copy codec properties when it's open");
         close(); //
     }
     d.is_open = false;
-    if (!ctx) {
-        avcodec_free_context(&d.codec_ctx);
-        d.codec_ctx = 0;
-        return;
-    }
-    if (!d.codec_ctx)
-        d.codec_ctx = avcodec_alloc_context3(NULL);
-    // avcodec_alloc_context3(codec) equals to avcodec_alloc_context3(NULL) + avcodec_get_context_defaults3(codec), codec specified private data is initialized
-    if (!d.codec_ctx) {
-        qWarning("avcodec_alloc_context3 failed");
-        return;
-    }
-    AV_ENSURE_OK(avcodec_copy_context(d.codec_ctx, ctx));
+    d.codec_ctx = codecCtx;
 }
 
 //TODO: reset other parameters?
-void* AVDecoder::codecContext() const
+AVCodecContext* AVDecoder::codecContext() const
 {
     return d_func().codec_ctx;
 }

@@ -132,10 +132,6 @@ bool VideoEncoderFFmpegPrivate::open()
         qWarning() << "Can not find encoder for codec " << codec_name;
         return false;
     }
-    if (avctx) {
-        avcodec_free_context(&avctx);
-        avctx = 0;
-    }
     avctx = avcodec_alloc_context3(codec);
     avctx->width = width; // coded_width works, why?
     avctx->height = height;

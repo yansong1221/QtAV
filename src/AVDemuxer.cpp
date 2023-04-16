@@ -236,7 +236,11 @@ public:
         if (media_changed)
             astream = vstream = sstream = StreamInfo();
         else
-            astream.avctx = vstream.avctx = sstream.avctx = 0;
+		{
+			astream.avctx.reset();
+            vstream.avctx.reset();
+            sstream.avctx.reset();
+        }
         audio_streams.clear();
         video_streams.clear();
         subtitle_streams.clear();
@@ -311,12 +315,11 @@ public:
             , wanted_stream(-1)
             , index(-1)
             , wanted_index(-1)
-            , avctx(0)
         {}
         // wanted_stream is REQUIRED. e.g. always set -1 to indicate the default stream, -2 to disable
         int stream, wanted_stream; // -1 default, selected by ff
         int index, wanted_index; // index in a kind of streams
-        AVCodecContext *avctx;
+        Wrapper::AVCodecContextWrapper avctx;
     } StreamInfo;
     StreamInfo astream, vstream, sstream;
 
@@ -1322,42 +1325,6 @@ QList<int> AVDemuxer::subtitleStreams() const
     return d->subtitle_streams;
 }
 
-AVCodecContext* AVDemuxer::audioCodecContext(int stream) const
-{
-    if (stream < 0)
-        return d->astream.avctx;
-    if (stream > (int)d->format_ctx->nb_streams)
-        return 0;
-    AVCodecContext *avctx = d->format_ctx->streams[stream]->codec;
-    if (avctx->codec_type == AVMEDIA_TYPE_AUDIO)
-        return avctx;
-    return 0;
-}
-
-AVCodecContext* AVDemuxer::videoCodecContext(int stream) const
-{
-    if (stream < 0)
-        return d->vstream.avctx;
-    if (stream > (int)d->format_ctx->nb_streams)
-        return 0;
-    AVCodecContext *avctx = d->format_ctx->streams[stream]->codec;
-    if (avctx->codec_type == AVMEDIA_TYPE_VIDEO)
-        return avctx;
-    return 0;
-}
-
-AVCodecContext* AVDemuxer::subtitleCodecContext(int stream) const
-{
-    if (stream < 0)
-        return d->sstream.avctx;
-    if (stream > (int)d->format_ctx->nb_streams)
-        return 0;
-    AVCodecContext *avctx = d->format_ctx->streams[stream]->codec;
-    if (avctx->codec_type == AVMEDIA_TYPE_SUBTITLE)
-        return avctx;
-    return 0;
-}
-
 /**
  * @brief getInterruptTimeout return the interrupt timeout
  * @return
@@ -1529,6 +1496,21 @@ bool AVDemuxer::stopRecording(const QString &filePath)
     return true;
 }
 
+AVCodecContext* AVDemuxer::playAudioCodecContext() const
+{
+    return &d->astream.avctx;
+}
+
+AVCodecContext* AVDemuxer::playVideoCodecContext() const
+{
+    return &d->vstream.avctx;
+}
+
+AVCodecContext* AVDemuxer::playSubtitleCodecContext() const
+{
+    return &d->sstream.avctx;
+}
+
 bool AVDemuxer::Private::setStream(AVDemuxer::StreamType st, int streamValue)
 {
     if (streamValue < -1)
@@ -1571,7 +1553,7 @@ bool AVDemuxer::Private::setStream(AVDemuxer::StreamType st, int streamValue)
     // don't touch wanted index
     si->stream = s;
     si->wanted_stream = streamValue;
-    si->avctx = format_ctx->streams[s]->codec;
+    si->avctx = format_ctx->streams[s]->codecpar;
     has_attached_pic = !!(format_ctx->streams[s]->disposition & AV_DISPOSITION_ATTACHED_PIC);
     return true;
 }
@@ -1584,7 +1566,7 @@ bool AVDemuxer::Private::prepareStreams()
         return false;
     AVMediaType type = AVMEDIA_TYPE_UNKNOWN;
     for (unsigned int i = 0; i < format_ctx->nb_streams; ++i) {
-        type = format_ctx->streams[i]->codec->codec_type;
+        type = format_ctx->streams[i]->codecpar->codec_type;
         if (type == AVMEDIA_TYPE_VIDEO) {
             video_streams.push_back(i);
         } else if (type == AVMEDIA_TYPE_AUDIO) {

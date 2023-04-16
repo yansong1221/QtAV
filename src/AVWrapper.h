@@ -13,7 +13,7 @@ namespace QtAV::Wrapper {
 		AVPacketWrapper();
 		AVPacketWrapper(const AVPacket* packet);
 		~AVPacketWrapper();
-		
+
 	public:
 		AVPacketWrapper(const AVPacketWrapper& other);
 		AVPacketWrapper& operator=(const AVPacketWrapper& other);
@@ -62,14 +62,31 @@ namespace QtAV::Wrapper {
 
 	class AVCodecContextWrapper {
 	public:
-		AVCodecContextWrapper();
+		AVCodecContextWrapper() = default;
 		AVCodecContextWrapper(const AVCodecParameters* par);
+		AVCodecContextWrapper(const AVCodecContext* ctx);
 		~AVCodecContextWrapper();
 	public:
-		const AVCodecContext* codecContext() const;
-		AVCodecContext* codecContext();
+		AVCodecContextWrapper& operator=(const AVCodecParameters* par);
+		AVCodecContextWrapper& operator=(const AVCodecContext* ctx);
+
+		void assign(const AVCodecParameters* par);
+		void assign(const AVCodecContext* ctx);
+
+		void reset();
+
+		const AVCodecContext* data() const;
+		AVCodecContext* data();
+
+		const AVCodecContext* operator&() const;
+		AVCodecContext* operator&();
+
+		operator bool() const { return ctx_ != nullptr; }
+		operator AVCodecContext* () const { return ctx_; }
+
+		AVCodecContext* operator->() const { return ctx_; }
 	private:
-		AVCodecContext* ctx_;
+		AVCodecContext* ctx_ = nullptr;
 	};
 
 }

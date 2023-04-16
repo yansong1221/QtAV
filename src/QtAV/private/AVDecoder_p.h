@@ -27,6 +27,7 @@
 #include <QtCore/QVector>
 #include "QtAV/QtAV_Global.h"
 #include "QtAV/private/AVCompat.h"
+#include "AVWrapper.h"
 
 namespace QtAV {
 
@@ -90,20 +91,16 @@ public:
     }
 
     AVDecoderPrivate():
-        codec_ctx(0)
-      , available(true)
+       available(true)
       , is_open(false)
       , undecoded_size(0)
       , dict(0)
     {
-        codec_ctx = avcodec_alloc_context3(NULL);
+        
     }
     virtual ~AVDecoderPrivate() {
         if (dict) {
             av_dict_free(&dict);
-        }
-        if (codec_ctx) {
-            avcodec_free_context(&codec_ctx);
         }
     }
     virtual bool open() {return true;}
@@ -112,7 +109,7 @@ public:
     void applyOptionsForDict();
     void applyOptionsForContext();
 
-    AVCodecContext *codec_ctx; //set once and not change
+    Wrapper::AVCodecContextWrapper codec_ctx; //set once and not change
     bool available; //TODO: true only when context(and hw ctx) is ready
     bool is_open;
     int undecoded_size;

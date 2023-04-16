@@ -80,7 +80,7 @@ namespace QtAV::Wrapper {
 	AVFrameWapper::AVFrameWapper()
 		:frame_(av_frame_alloc())
 	{
-		
+
 	}
 
 	AVFrameWapper::AVFrameWapper(const AVFrame* frame)
@@ -149,19 +149,14 @@ namespace QtAV::Wrapper {
 		frame_ = av_frame_alloc();
 	}
 
-	AVCodecContextWrapper::AVCodecContextWrapper()
-		:ctx_(avcodec_alloc_context3(nullptr))
+	AVCodecContextWrapper::AVCodecContextWrapper(const AVCodecParameters* par)
 	{
-
+		this->assign(par);
 	}
 
-	AVCodecContextWrapper::AVCodecContextWrapper(const AVCodecParameters* par)
-		: AVCodecContextWrapper()
+	AVCodecContextWrapper::AVCodecContextWrapper(const AVCodecContext* ctx)
 	{
-		if (avcodec_parameters_to_context(ctx_, par) < 0)
-		{
-			throw std::runtime_error("avcodec_parameters_to_context");
-		}
+		this->assign(ctx);
 	}
 
 	AVCodecContextWrapper::~AVCodecContextWrapper()
@@ -169,16 +164,80 @@ namespace QtAV::Wrapper {
 		avcodec_free_context(&ctx_);
 	}
 
-	const AVCodecContext* AVCodecContextWrapper::codecContext() const
+	const AVCodecContext* AVCodecContextWrapper::data() const
 	{
 		return ctx_;
 	}
 
-	AVCodecContext* AVCodecContextWrapper::codecContext()
+	AVCodecContext* AVCodecContextWrapper::data()
 	{
 		return ctx_;
 	}
 
+	const AVCodecContext* AVCodecContextWrapper::operator&() const
+	{
+		return ctx_;
+	}
 
+	AVCodecContext* AVCodecContextWrapper::operator&()
+	{
+		return ctx_;
+	}
+
+	void AVCodecContextWrapper::assign(const AVCodecParameters* par)
+	{
+		if (par == nullptr)
+		{
+			avcodec_free_context(&ctx_);
+			return;
+		}
+
+		avcodec_free_context(&ctx_);
+
+		ctx_ = avcodec_alloc_context3(nullptr);
+		if (avcodec_parameters_to_context(ctx_, par) < 0)
+		{
+			avcodec_free_context(&ctx_);
+			throw std::runtime_error("avcodec_parameters_to_context");
+		}
+
+	}
+
+	void AVCodecContextWrapper::assign(const AVCodecContext* ctx)
+	{
+		if (ctx == ctx_)
+			return;
+
+		if (ctx == nullptr)
+		{
+			avcodec_free_context(&ctx_);
+			return;
+		}
+
+		auto par = avcodec_parameters_alloc();
+		if (avcodec_parameters_from_context(par, ctx) < 0)
+		{
+			avcodec_parameters_free(&par);
+			throw std::runtime_error("avcodec_parameters_from_context");
+		}
+		this->assign(par);
+	}
+
+	void AVCodecContextWrapper::reset()
+	{
+		avcodec_free_context(&ctx_);
+	}
+
+	AVCodecContextWrapper& AVCodecContextWrapper::operator=(const AVCodecParameters* par)
+	{
+		this->assign(par);
+		return *this;
+	}
+
+	AVCodecContextWrapper& AVCodecContextWrapper::operator=(const AVCodecContext* ctx)
+	{
+		this->assign(ctx);
+		return *this;
+	}
 
 }

@@ -371,7 +371,7 @@ bool SubtitleProcessorFFmpeg::processSubtitle()
         qWarning("no subtitle stream found");
         return false;
     }
-    codec_ctx = m_reader.subtitleCodecContext();
+    codec_ctx = m_reader.playSubtitleCodecContext();
     const AVCodec *dec = avcodec_find_decoder(codec_ctx->codec_id);
     const AVCodecDescriptor *dec_desc = avcodec_descriptor_get(codec_ctx->codec_id);
     if (!dec) {

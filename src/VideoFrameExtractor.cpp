@@ -195,8 +195,8 @@ public:
             if (!vd)
                 continue;
             decoder.reset(vd);
-            AVCodecContext *cctx = demuxer.videoCodecContext();
-            if (cctx) decoder->setCodecContext(demuxer.videoCodecContext());
+            AVCodecContext *cctx = demuxer.playVideoCodecContext();
+            if (cctx) decoder->setCodecContext(demuxer.playVideoCodecContext());
             if (!cctx || !decoder->open()) {
                 decoder.reset(0);
                 continue;

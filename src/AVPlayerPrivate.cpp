@@ -298,7 +298,7 @@ void AVPlayer::Private::initCommonStatistics(int s, Statistics::Common *st, AVCo
 
 void AVPlayer::Private::initAudioStatistics(int s)
 {
-    AVCodecContext *avctx = demuxer.audioCodecContext();
+    AVCodecContext *avctx = demuxer.playAudioCodecContext();
     statistics.audio = Statistics::Common();
     statistics.audio_only = Statistics::AudioOnly();
     if (!avctx)
@@ -323,7 +323,7 @@ void AVPlayer::Private::initAudioStatistics(int s)
 
 void AVPlayer::Private::initVideoStatistics(int s)
 {
-    AVCodecContext *avctx = demuxer.videoCodecContext();
+    AVCodecContext *avctx = demuxer.playVideoCodecContext();
     statistics.video = Statistics::Common();
     statistics.video_only = Statistics::VideoOnly();
     if (!avctx)
@@ -364,7 +364,7 @@ bool AVPlayer::Private::setupAudioThread(AVPlayer *player)
         athread->setDecoder(0);
         athread->setOutput(0);
     }
-    AVCodecContext *avctx = ademuxer->audioCodecContext();
+    AVCodecContext *avctx = ademuxer->playAudioCodecContext();
     if (!avctx) {
         // TODO: close ao? //TODO: check pulseaudio perapp control if closed
         return false;
@@ -515,7 +515,7 @@ bool AVPlayer::Private::applySubtitleStream(int n, AVPlayer *player)
 {
     if (!demuxer.setStreamIndex(AVDemuxer::SubtitleStream, n))
         return false;
-    AVCodecContext *ctx = demuxer.subtitleCodecContext();
+    AVCodecContext *ctx = demuxer.playSubtitleCodecContext();
     if (!ctx)
         return false;
     // FIXME: AVCodecDescriptor.name and AVCodec.name are different!
@@ -535,7 +535,7 @@ bool AVPlayer::Private::tryApplyDecoderPriority(AVPlayer *player)
     // TODO: add an option to apply the new decoder even if not available
     qint64 pos = player->position();
     VideoDecoder *vd = NULL;
-    AVCodecContext *avctx = demuxer.videoCodecContext();
+    AVCodecContext *avctx = demuxer.playVideoCodecContext();
     foreach(VideoDecoderId vid, vc_ids) {
         qDebug("**********trying video decoder: %s...", VideoDecoder::name(vid));
         vd = VideoDecoder::create(vid);
@@ -583,7 +583,7 @@ bool AVPlayer::Private::setupVideoThread(AVPlayer *player)
         vthread->packetQueue()->clear();
         vthread->setDecoder(0);
     }
-    AVCodecContext *avctx = demuxer.videoCodecContext();
+    AVCodecContext *avctx = demuxer.playVideoCodecContext();
     if (!avctx) {
         return false;
     }

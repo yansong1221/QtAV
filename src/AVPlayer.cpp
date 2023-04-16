@@ -1,4 +1,4 @@
-﻿/******************************************************************************
+/******************************************************************************
     QtAV:  Multimedia framework based on Qt and FFmpeg
     Copyright (C) 2012-2017 Wang Bin <wbsecg1@gmail.com>
 
@@ -1429,7 +1429,7 @@ void AVPlayer::playInternal()
     // TODO: add isVideo() or hasVideo()?
     if (masterClock()->isClockAuto()) {
         qDebug("auto select clock: audio > external");
-        if (!d->demuxer.audioCodecContext() || !d->ao || !d->ao->isOpen() || !d->athread) {
+        if (!d->demuxer.playAudioCodecContext() || !d->ao || !d->ao->isOpen() || !d->athread) {
             masterClock()->setClockType(AVClock::ExternalClock);
             qDebug("No audio found or audio not supported. Using ExternalClock.");
         } else {
@@ -1439,18 +1439,18 @@ void AVPlayer::playInternal()
     }
     masterClock()->setInitialValue((double)absoluteMediaStartPosition()/1000.0);
     // from previous play()
-    if (d->demuxer.audioCodecContext() && d->athread) {
+    if (d->demuxer.playAudioCodecContext() && d->athread) {
         qDebug("Starting audio thread...");
         d->athread->start();
     }
-    if (d->demuxer.videoCodecContext() && d->vthread) {
+    if (d->demuxer.playVideoCodecContext() && d->vthread) {
         qDebug("Starting video thread...");
         d->vthread->start();
     }
 
-    if (d->demuxer.audioCodecContext() && d->athread)
+    if (d->demuxer.playAudioCodecContext() && d->athread)
         d->athread->waitForStarted();
-    if (d->demuxer.videoCodecContext() && d->vthread)
+    if (d->demuxer.playVideoCodecContext() && d->vthread)
         d->vthread->waitForStarted();
 
     d->read_thread->setMediaEndAction(mediaEndAction());

@@ -152,9 +152,10 @@ public:
     int subtitleStream() const;
     QList<int> subtitleStreams() const;
     //codec. stream < 0: the stream going to play (or the stream set by setStreamIndex())
-    AVCodecContext* audioCodecContext(int stream = -1) const;
-    AVCodecContext* videoCodecContext(int stream = -1) const;
-    AVCodecContext* subtitleCodecContext(int stream = -1) const;
+
+    AVCodecContext* playAudioCodecContext() const;
+    AVCodecContext* playVideoCodecContext() const;
+    AVCodecContext* playSubtitleCodecContext() const;
     /**
      * @brief getInterruptTimeout return the interrupt timeout
      */
