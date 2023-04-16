@@ -52,21 +52,19 @@ else()
   message(FATAL_ERROR "libavformat libavcodec libswscale libavutil libavfilter libavdevice is required")
 endif()
 
+if (NOT FFMPEG_AVRESAMPLE_FOUND AND NOT FFMPEG_SWRESAMPLE_FOUND)
+    message(FATAL_ERROR "libswresample or libavresample is required")
+endif()
+
 if(FFMPEG_AVRESAMPLE_FOUND)
-  list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVRESAMPLE=1)
-  list(APPEND EXTRA_DEFS -DBUILD_AVR)
-  list(APPEND SOURCES AudioResamplerLibav.cpp)  
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVRESAMPLE=1) 
 endif()
 
 if(FFMPEG_SWRESAMPLE_FOUND)
   list(APPEND EXTRA_DEFS -DQTAV_HAVE_SWRESAMPLE=1)
-  list(APPEND EXTRA_DEFS -DBUILD_SWR)
-  list(APPEND SOURCES AudioResamplerFF.cpp)  
 endif()
 
-if (NOT FFMPEG_AVRESAMPLE_FOUND AND NOT FFMPEG_SWRESAMPLE_FOUND)
-    message(FATAL_ERROR "libswresample or libavresample is required")
-endif()
+
   
 list(APPEND EXTRA_DEFS -DBUILD_QTAV_LIB -D__STDC_CONSTANT_MACROS)
 
@@ -145,7 +143,9 @@ if (APPLE)
   set(CMAKE_CXX_SYSTEM_FRAMEWORK_SEARCH_FLAG "-F ") # original is "-iframework", lots of build errors
   set(CMAKE_C_SYSTEM_FRAMEWORK_SEARCH_FLAG "-F ")
   set(OLD_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
-  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} avcodec)
+  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${FFMPEG_LIBRARIES})
+  set(OLD_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES})
+  set(CMAKE_REQUIRED_INCLUDES ${EXTRA_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR} ${FFMPEG_INCLUDE_DIRS})
   check_c_source_compiles(
     "#include <libavcodec/videotoolbox.h>
     int main() {
@@ -153,6 +153,7 @@ if (APPLE)
         return 0;
     }" HAVE_VIDEOTOOLBOX)
   set(CMAKE_REQUIRED_LIBRARIES ${OLD_REQUIRED_LIBRARIES})
+  set(CMAKE_REQUIRED_INCLUDES ${OLD_REQUIRED_INCLUDES})
 
   if (HAVE_VIDEOTOOLBOX)
     list(APPEND EXTRA_DEFS -DQTAV_HAVE_VIDEOTOOLBOX=1)
