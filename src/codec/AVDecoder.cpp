@@ -130,12 +130,12 @@ bool AVDecoder::close()
     DPTR_D(AVDecoder);
     d.is_open = false;
     // hwa extra finalize can be here
-    flush();
-    d.close();
+    flush();   
     // TODO: reset config?
     if (d.codec_ctx) {
         AV_ENSURE_OK(avcodec_close(d.codec_ctx), false);
     }
+    d.close();
     return true;
 }
 

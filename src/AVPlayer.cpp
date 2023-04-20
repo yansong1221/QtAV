@@ -1620,7 +1620,7 @@ void AVPlayer::tryClearVideoRenderers()
         qWarning("internal error");
         return;
     }
-    if (!(mediaEndAction() & MediaEndAction_KeepDisplay) && file().isEmpty()) {
+    if (!(mediaEndAction() & MediaEndAction_KeepDisplay)) {
         d->vthread->clearRenderers();
     }
 }

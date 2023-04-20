@@ -49,8 +49,7 @@ class EGLInteropResource Q_DECL_FINAL: public InteropResource
 {
 public:
     EGLInteropResource()
-        : egl(new EGL())
-        , vp(0)
+        : egl(std::make_unique<EGL>())
         , boundTex(0)
     {}
     ~EGLInteropResource();
@@ -61,8 +60,8 @@ private:
     void releaseEGL();
     bool ensureSurface(int w, int h);
 
-    EGL* egl;
-    dx::D3D11VP *vp;
+    std::unique_ptr <EGL> egl;
+    std::unique_ptr<dx::D3D11VP> vp;
     ComPtr<ID3D11Texture2D> d3dtex;
     GLuint boundTex;
 };
@@ -71,23 +70,17 @@ InteropResource* CreateInteropEGL() { return new EGLInteropResource();}
 
 EGLInteropResource::~EGLInteropResource()
 {
-    if (vp) {
-        delete vp;
-        vp = 0;
-    }
+    vp.reset();
     releaseEGL();
-    if (egl) {
-        delete egl;
-        egl = 0;
-    }
+    egl.reset();
 }
 
 void EGLInteropResource::releaseEGL() {
-    if (egl->surface != EGL_NO_SURFACE) {
-        eglReleaseTexImage(egl->dpy, egl->surface, EGL_BACK_BUFFER);
-        eglDestroySurface(egl->dpy, egl->surface);
-        egl->surface = EGL_NO_SURFACE;
-    }
+	if (egl->surface != EGL_NO_SURFACE) {
+		//eglReleaseTexImage(egl->dpy, egl->surface, EGL_BACK_BUFFER);
+		eglDestroySurface(egl->dpy, egl->surface);
+		egl->surface = EGL_NO_SURFACE;
+	}
 }
 
 bool EGLInteropResource::ensureSurface(int w, int h) {
@@ -137,7 +130,7 @@ bool EGLInteropResource::ensureSurface(int w, int h) {
     DX_ENSURE(resource->GetSharedHandle(&share_handle), false);
 
     if (!vp)
-        vp = new dx::D3D11VP(d3ddev);
+        vp = std::make_unique<dx::D3D11VP>(d3ddev);
     vp->setOutput(d3dtex.Get());
 
     releaseEGL();

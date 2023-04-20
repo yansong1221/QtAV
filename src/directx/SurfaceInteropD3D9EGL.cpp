@@ -53,7 +53,7 @@ private:
     void releaseEGL();
     bool ensureSurface(int w, int h);
 
-    EGL* egl;
+    std::unique_ptr<EGL> egl;
     IDirect3DQuery9 *dx_query;
 };
 
@@ -64,7 +64,7 @@ InteropResource* CreateInteropEGL(IDirect3DDevice9 *dev)
 
 EGLInteropResource::EGLInteropResource(IDirect3DDevice9 * d3device)
     : InteropResource(d3device)
-    , egl(new EGL())
+    , egl(std::make_unique<EGL>())
     , dx_query(NULL)
 {
     DX_ENSURE_OK(d3device->CreateQuery(D3DQUERYTYPE_EVENT, &dx_query));
@@ -74,16 +74,13 @@ EGLInteropResource::EGLInteropResource(IDirect3DDevice9 * d3device)
 EGLInteropResource::~EGLInteropResource()
 {
     releaseEGL();
-    if (egl) {
-        delete egl;
-        egl = NULL;
-    }
+    egl.reset();
     SafeRelease(&dx_query);
 }
 
 void EGLInteropResource::releaseEGL() {
     if (egl->surface != EGL_NO_SURFACE) {
-        eglReleaseTexImage(egl->dpy, egl->surface, EGL_BACK_BUFFER);
+        //eglReleaseTexImage(egl->dpy, egl->surface, EGL_BACK_BUFFER);
         eglDestroySurface(egl->dpy, egl->surface);
         egl->surface = EGL_NO_SURFACE;
     }

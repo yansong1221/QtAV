@@ -323,7 +323,7 @@ VideoDecoderD3DPrivate::VideoDecoderD3DPrivate()
 
 VideoDecoderD3DPrivate::~VideoDecoderD3DPrivate()
 {
-    this->frame.reset();
+    
 }
 
 bool VideoDecoderD3DPrivate::open()
@@ -346,6 +346,7 @@ bool VideoDecoderD3DPrivate::open()
 
 void VideoDecoderD3DPrivate::close()
 {
+    this->frame.reset();
     qDeleteAll(surfaces);
     surfaces.clear();
     restore();
@@ -432,6 +433,7 @@ void VideoDecoderD3DPrivate::releaseBuffer(void *opaque, uint8_t *data)
     Q_UNUSED(data);
     va_surface_t *surface = (va_surface_t*)opaque;
     surface->ref--;
+    Q_ASSERT(surface->ref == 0);
 }
 
 int VideoDecoderD3DPrivate::aligned(int x)
