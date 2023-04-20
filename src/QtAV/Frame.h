@@ -104,7 +104,7 @@ public:
 
 protected:
     Frame(FramePrivate *d);
-    std::shared_ptr<FramePrivate> d_ptr;
+    QExplicitlySharedDataPointer<FramePrivate> d_ptr;
 };
 
 } //namespace QtAV
