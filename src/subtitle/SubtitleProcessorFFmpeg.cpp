@@ -369,6 +369,10 @@ bool SubtitleProcessorFFmpeg::processSubtitle()
         return false;
     }
     codec_ctx = m_reader.playSubtitleCodecContext();
+	// no way to get time base. the pts unit used in processLine() is 's', ffmpeg use ms, so set 1/1000 here
+    codec_ctx->time_base.num = 1;
+    codec_ctx->time_base.den = 1000;
+
     const AVCodec *dec = avcodec_find_decoder(codec_ctx->codec_id);
     const AVCodecDescriptor *dec_desc = avcodec_descriptor_get(codec_ctx->codec_id);
     if (!dec) {
