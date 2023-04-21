@@ -5,6 +5,7 @@ struct AVFrame;
 struct AVPacket;
 struct AVCodecContext;
 struct AVCodecParameters;
+struct AVCodec;
 
 namespace QtAV::Wrapper {
 
@@ -64,6 +65,7 @@ namespace QtAV::Wrapper {
 	public:
 		AVCodecContextWrapper() = default;
 		AVCodecContextWrapper(const AVCodecParameters* par);
+		AVCodecContextWrapper(const AVCodec* codec);
 		AVCodecContextWrapper(const AVCodecContext* ctx);
 		~AVCodecContextWrapper();
 	public:
@@ -72,6 +74,7 @@ namespace QtAV::Wrapper {
 
 		void assign(const AVCodecParameters* par);
 		void assign(const AVCodecContext* ctx);
+		void assign(const AVCodec* codec);
 
 		void reset();
 

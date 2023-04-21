@@ -48,7 +48,7 @@ public:
     QString getText(qreal pts) const Q_DECL_OVERRIDE;
 private:
     bool processSubtitle();
-    AVCodecContext *codec_ctx;
+    Wrapper::AVCodecContextWrapper codec_ctx;
     AVDemuxer m_reader;
     QList<SubtitleFrame> m_frames;
 };
@@ -60,13 +60,12 @@ static const char kName[] = "FFmpeg";
 FACTORY_REGISTER(SubtitleProcessor, FFmpeg, kName)
 
 SubtitleProcessorFFmpeg::SubtitleProcessorFFmpeg()
-    : codec_ctx(0)
 {
 }
 
 SubtitleProcessorFFmpeg::~SubtitleProcessorFFmpeg()
 {
-    avcodec_free_context(&codec_ctx);
+    
 }
 
 SubtitleProcessorId SubtitleProcessorFFmpeg::id() const
@@ -248,9 +247,7 @@ QString SubtitleProcessorFFmpeg::getText(qreal pts) const
 bool SubtitleProcessorFFmpeg::processHeader(const QByteArray &codec, const QByteArray &data)
 {
     Q_UNUSED(data);
-    if (codec_ctx) {
-        avcodec_free_context(&codec_ctx);
-    }
+
     const AVCodec *c = avcodec_find_decoder_by_name(codec.constData());
     if (!c) {
         qDebug("subtitle avcodec_descriptor_get_by_name %s", codec.constData());
@@ -265,7 +262,7 @@ bool SubtitleProcessorFFmpeg::processHeader(const QByteArray &codec, const QByte
         qWarning("No subtitle decoder found for codec: %s, try fron descriptor", codec.constData());
         return false;
     }
-    codec_ctx = avcodec_alloc_context3(c);
+    codec_ctx.assign(c);
     if (!codec_ctx)
         return false;
     // no way to get time base. the pts unit used in processLine() is 's', ffmpeg use ms, so set 1/1000 here
@@ -280,7 +277,7 @@ bool SubtitleProcessorFFmpeg::processHeader(const QByteArray &codec, const QByte
         memcpy(codec_ctx->extradata, data.constData(), data.size());
     }
     if (avcodec_open2(codec_ctx, c, NULL) < 0) {
-        avcodec_free_context(&codec_ctx);
+        codec_ctx.reset();
         return false;
     }
     return true;//codec != QByteArrayLiteral("ass") && codec != QByteArrayLiteral("ssa");
@@ -410,7 +407,7 @@ bool SubtitleProcessorFFmpeg::processSubtitle()
             m_frames.append(frame);
     }
     avcodec_close(codec_ctx);
-    codec_ctx = 0;
+    codec_ctx.reset();
     return true;
 }
 

@@ -159,6 +159,11 @@ namespace QtAV::Wrapper {
 		this->assign(ctx);
 	}
 
+	AVCodecContextWrapper::AVCodecContextWrapper(const AVCodec* codec)
+	{
+		this->assign(codec);
+	}
+
 	AVCodecContextWrapper::~AVCodecContextWrapper()
 	{
 		avcodec_free_context(&ctx_);
@@ -221,6 +226,17 @@ namespace QtAV::Wrapper {
 			throw std::runtime_error("avcodec_parameters_from_context");
 		}
 		this->assign(par);
+		avcodec_parameters_free(&par);
+	}
+
+	void AVCodecContextWrapper::assign(const AVCodec* codec)
+	{
+		if (!codec)
+		{
+			avcodec_free_context(&ctx_);
+			return;
+		}
+		ctx_ = avcodec_alloc_context3(codec);
 	}
 
 	void AVCodecContextWrapper::reset()

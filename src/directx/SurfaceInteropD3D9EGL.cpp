@@ -44,6 +44,7 @@ public:
 
 class EGLInteropResource Q_DECL_FINAL: public InteropResource
 {
+    Q_OBJECT
 public:
     EGLInteropResource(IDirect3DDevice9 * d3device);
     ~EGLInteropResource();
@@ -57,9 +58,9 @@ private:
     IDirect3DQuery9 *dx_query;
 };
 
-InteropResource* CreateInteropEGL(IDirect3DDevice9 *dev)
+InteropResourcePtr CreateInteropEGL(IDirect3DDevice9 *dev)
 {
-    return new EGLInteropResource(dev);
+    return InteropResourcePtr(new EGLInteropResource(dev), &QObject::deleteLater);
 }
 
 EGLInteropResource::EGLInteropResource(IDirect3DDevice9 * d3device)
@@ -80,7 +81,7 @@ EGLInteropResource::~EGLInteropResource()
 
 void EGLInteropResource::releaseEGL() {
     if (egl->surface != EGL_NO_SURFACE) {
-        //eglReleaseTexImage(egl->dpy, egl->surface, EGL_BACK_BUFFER);
+        eglReleaseTexImage(egl->dpy, egl->surface, EGL_BACK_BUFFER);
         eglDestroySurface(egl->dpy, egl->surface);
         egl->surface = EGL_NO_SURFACE;
     }
@@ -199,3 +200,4 @@ bool EGLInteropResource::map(IDirect3DSurface9* surface, GLuint tex, int w, int 
 }
 } //namespace d3d9
 } //namespace QtAV
+#include "SurfaceInteropD3D9EGL.moc"

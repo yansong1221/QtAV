@@ -47,6 +47,7 @@ public:
 
 class EGLInteropResource Q_DECL_FINAL: public InteropResource
 {
+    Q_OBJECT
 public:
     EGLInteropResource()
         : egl(std::make_unique<EGL>())
@@ -66,7 +67,7 @@ private:
     GLuint boundTex;
 };
 
-InteropResource* CreateInteropEGL() { return new EGLInteropResource();}
+InteropResourcePtr CreateInteropEGL() { return InteropResourcePtr(new EGLInteropResource(),&QObject::deleteLater);}
 
 EGLInteropResource::~EGLInteropResource()
 {
@@ -77,7 +78,7 @@ EGLInteropResource::~EGLInteropResource()
 
 void EGLInteropResource::releaseEGL() {
 	if (egl->surface != EGL_NO_SURFACE) {
-		//eglReleaseTexImage(egl->dpy, egl->surface, EGL_BACK_BUFFER);
+		eglReleaseTexImage(egl->dpy, egl->surface, EGL_BACK_BUFFER);
 		eglDestroySurface(egl->dpy, egl->surface);
 		egl->surface = EGL_NO_SURFACE;
 	}
@@ -171,3 +172,4 @@ bool EGLInteropResource::map(ComPtr<ID3D11Texture2D> surface, int index, GLuint 
 }
 } //namespace d3d11
 } //namespace QtAV
+#include "SurfaceInteropD3D11EGL.moc"
