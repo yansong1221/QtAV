@@ -68,30 +68,16 @@ endif()
   
 list(APPEND EXTRA_DEFS -DBUILD_QTAV_LIB -D__STDC_CONSTANT_MACROS)
 
-check_include_file(ass/ass.h HAVE_ASS_H)
-if(HAVE_ASS_H)
-  if(HAVE_CAPI) # dynamic load
-    if(IOS OR ANDROID OR WindowsPhone OR WindowsStore)
-    else()
-      set(HAVE_ASS 1)
-    endif()
-  endif()
-  if(NOT HAVE_ASS) # link to ass
-    check_library_exists(ass ass_library_init "" HAVE_ASS)
-    if(HAVE_ASS)
-      set(DYNAMIC_ASS 0)
-      list(APPEND EXTRA_DEFS -DCAPI_LINK_ASS)
-      list(APPEND EXTRA_LIBS ass)
-    endif()
-  endif()
-endif()
-if(HAVE_ASS)
-  list(APPEND EXTRA_DEFS -DQTAV_HAVE_LIBASS=1)
-  list(APPEND SOURCES
-    capi/ass_api.cpp
-    subtitle/SubtitleProcessorLibASS.cpp
-  )
-endif()
+find_package(ASS REQUIRED)
+
+list(APPEND EXTRA_DEFS -DCAPI_LINK_ASS)
+list(APPEND EXTRA_LIBS ASS::ASS)
+
+list(APPEND EXTRA_DEFS -DQTAV_HAVE_LIBASS=1)
+list(APPEND SOURCES
+  capi/ass_api.cpp
+  subtitle/SubtitleProcessorLibASS.cpp
+)
 
 set(DYNAMIC_OPENAL ${HAVE_CAPI})
 

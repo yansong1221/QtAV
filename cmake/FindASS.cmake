@@ -22,23 +22,36 @@ find_path(ASS_INCLUDE_DIR NAMES ass/ass.h
 find_library(ASS_LIBRARY NAMES ass libass
                          PATHS ${PC_ASS_LIBDIR})
 
+find_package(Freetype)
+find_package(harfbuzz CONFIG)
+
+find_library(ASS_DEPEND_FRIBIDI_LIBRARY NAMES fribidi)
+
+
 set(ASS_VERSION ${PC_ASS_VERSION})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ASS
-                                  REQUIRED_VARS ASS_LIBRARY ASS_INCLUDE_DIR
+                                  REQUIRED_VARS 
+
+                                  ASS_LIBRARY 
+                                  ASS_INCLUDE_DIR
+                                  ASS_DEPEND_FRIBIDI_LIBRARY
+                                  Freetype_FOUND
+                                  harfbuzz_FOUND
+
                                   VERSION_VAR ASS_VERSION)
 
 if(ASS_FOUND)
-  set(ASS_LIBRARIES ${ASS_LIBRARY})
+  set(ASS_LIBRARIES ${ASS_LIBRARY} ${ASS_DEPEND_LIBRARYS} Freetype::Freetype harfbuzz harfbuzz::harfbuzz ${ASS_DEPEND_FRIBIDI_LIBRARY})
   set(ASS_INCLUDE_DIRS ${ASS_INCLUDE_DIR})
 
   if(NOT TARGET ASS::ASS)
-    add_library(ASS::ASS UNKNOWN IMPORTED)
+    add_library(ASS::ASS INTERFACE IMPORTED)
     set_target_properties(ASS::ASS PROPERTIES
-                                   IMPORTED_LOCATION "${ASS_LIBRARY}"
-                                   INTERFACE_INCLUDE_DIRECTORIES "${ASS_INCLUDE_DIR}")
+    INTERFACE_LINK_LIBRARIES  "${ASS_LIBRARIES}"
+    INTERFACE_INCLUDE_DIRECTORIES  "${ASS_INCLUDE_DIRS}")
   endif()
 endif()
 
-mark_as_advanced(ASS_INCLUDE_DIR ASS_LIBRARY)
+mark_as_advanced(ASS_INCLUDE_DIRS ASS_LIBRARIES)
