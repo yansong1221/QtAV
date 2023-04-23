@@ -1,4 +1,4 @@
-find_package(Qt5 COMPONENTS Sql Dbus REQUIRED)
+find_package(Qt5 COMPONENTS Sql DBus REQUIRED)
 if(WIN32)
   set(EXE_TYPE WIN32)
 elseif(APPLE)
@@ -29,7 +29,7 @@ set_source_files_properties(${COMMON_RES} PROPERTIES GENERATED ON)
 add_library(common STATIC ${COMMON_SRC} ${COMMON_RES} ${COMMON_HEADERS})
 target_link_libraries(common
   PRIVATE Qt5::Core Qt5::Gui  
-  PUBLIC Qt5::Sql
+  PUBLIC Qt5::Sql Qt5::DBus
 )
 target_compile_definitions(common PUBLIC -DBUILD_COMMON_STATIC)
 target_include_directories(common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

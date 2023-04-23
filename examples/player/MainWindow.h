@@ -24,6 +24,7 @@
 #include <QWidget>
 #include <QUrl>
 
+
 QT_BEGIN_NAMESPACE
 class QWidgetAction;
 class QToolButton;
@@ -59,6 +60,7 @@ class StatisticsView;
 class OSDFilter;
 class AVFilterSubtitle;
 class Preview;
+class PowerManagement;
 class MainWindow : public QWidget
 {
     Q_OBJECT
@@ -215,6 +217,8 @@ private:
     QtAV::VideoPreviewWidget *m_preview;
     QtAV::DynamicShaderObject *m_shader;
     QtAV::GLSLFilter *m_glsl;
+
+    PowerManagement* mpPowerManagement;
 };
 
 

@@ -19,6 +19,7 @@
 ******************************************************************************/
 #include "MainWindow.h"
 #include "EventFilter.h"
+#include "common/powermanagement/powermanagement.h"
 #include <QtAV>
 #include <QtAV/OpenGLVideo.h>
 #include <QtAV/VideoShaderObject.h>
@@ -118,6 +119,8 @@ MainWindow::MainWindow(QWidget *parent) :
     #if defined(Q_OS_MACX) && QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
         QApplication::setStyle(QStyleFactory::create("Fusion"));
     #endif
+
+    mpPowerManagement = new PowerManagement(this);
 
     setWindowIcon(QIcon(QString::fromLatin1(":/QtAV.svg")));
     mpOSD = new OSDFilter(this);
@@ -851,7 +854,7 @@ void MainWindow::onStartPlay()
     setVolume();
     mShowControl = 0;
     QTimer::singleShot(3000, this, SLOT(tryHideControlBar()));
-    ScreenSaver::instance().disable();
+    mpPowerManagement->setActivityState(true);
     initAudioTrackMenu();
     mpRepeatA->setMinimumTime(QTime(0, 0, 0).addMSecs(mpPlayer->mediaStartPosition()));
     mpRepeatA->setMaximumTime(QTime(0, 0, 0).addMSecs(mpPlayer->mediaStopPosition()));
@@ -892,7 +895,7 @@ void MainWindow::onStopPlay()
     mpCurrent->setText(QString::fromLatin1("00:00:00"));
     mpEnd->setText(QString::fromLatin1("00:00:00"));
     tryShowControlBar();
-    ScreenSaver::instance().enable();
+    mpPowerManagement->setActivityState(false);
     toggleRepeat(false);
     //mRepeateMax = 0;
     killTimer(mCursorTimer);

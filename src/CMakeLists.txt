@@ -68,16 +68,17 @@ endif()
   
 list(APPEND EXTRA_DEFS -DBUILD_QTAV_LIB -D__STDC_CONSTANT_MACROS)
 
-find_package(ASS REQUIRED)
+find_package(ASS)
+if(ASS_FOUND)
+  list(APPEND EXTRA_DEFS -DCAPI_LINK_ASS)
+  list(APPEND EXTRA_LIBS ASS::ASS)
 
-list(APPEND EXTRA_DEFS -DCAPI_LINK_ASS)
-list(APPEND EXTRA_LIBS ASS::ASS)
-
-list(APPEND EXTRA_DEFS -DQTAV_HAVE_LIBASS=1)
-list(APPEND SOURCES
-  capi/ass_api.cpp
-  subtitle/SubtitleProcessorLibASS.cpp
-)
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_LIBASS=1)
+  list(APPEND SOURCES
+    capi/ass_api.cpp
+    subtitle/SubtitleProcessorLibASS.cpp
+  )
+endif()
 
 set(DYNAMIC_OPENAL ${HAVE_CAPI})
 
