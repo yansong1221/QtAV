@@ -19,6 +19,10 @@ set(COMMON_HEADERS
   common/powermanagement/powermanagement_x11.h
   common/common_export.h
 )
+if(APPLE)
+  message("apple")
+  list(APPEND COMMON_LIBS "-framework CoreServices -framework IOKit")
+endif()
 
 SET(COMMON_QRC common/theme/theme.qrc)
 SOURCE_GROUP("Resources" FILES ${COMMON_QRC})
@@ -29,7 +33,7 @@ set_source_files_properties(${COMMON_RES} PROPERTIES GENERATED ON)
 add_library(common STATIC ${COMMON_SRC} ${COMMON_RES} ${COMMON_HEADERS})
 target_link_libraries(common
   PRIVATE Qt5::Core Qt5::Gui  
-  PUBLIC Qt5::Sql Qt5::DBus
+  PUBLIC Qt5::Sql Qt5::DBus ${COMMON_LIBS}
 )
 target_compile_definitions(common PUBLIC -DBUILD_COMMON_STATIC)
 target_include_directories(common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
