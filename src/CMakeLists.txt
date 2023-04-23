@@ -129,7 +129,7 @@ if (APPLE)
         )
     else()
       list(APPEND SOURCES 
-        codec/video/SurfaceInteropIOSurface.cpp
+        codec/video/SurfaceInteropIOSurface.mm
         )
     endif()
   endif()
