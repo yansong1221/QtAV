@@ -69,36 +69,23 @@ endif()
 list(APPEND EXTRA_DEFS -DBUILD_QTAV_LIB -D__STDC_CONSTANT_MACROS)
 
 find_package(ASS)
-if(ASS_FOUND)
-  list(APPEND EXTRA_DEFS -DCAPI_LINK_ASS)
-  list(APPEND EXTRA_LIBS ASS::ASS)
-
-  list(APPEND EXTRA_DEFS -DQTAV_HAVE_LIBASS=1)
+if(ASS_FOUND) 
   list(APPEND SOURCES
     capi/ass_api.cpp
     subtitle/SubtitleProcessorLibASS.cpp
   )
+  list(APPEND EXTRA_LIBS ASS::ASS)
+  list(APPEND EXTRA_DEFS -DCAPI_LINK_ASS -DQTAV_HAVE_LIBASS=1)
 endif()
-
-set(DYNAMIC_OPENAL ${HAVE_CAPI})
 
 find_package(OpenAL CONFIG)
 if(OPENAL_FOUND)
-  set(HAVE_OPENAL 1)
-  if(NOT DYNAMIC_OPENAL)
-    list(APPEND EXTRA_LIBS OpenAL::OpenAL)
-  endif()
-  list(APPEND EXTRA_DEFS -DHEADER_OPENAL_PREFIX)
-endif()
-
-if(HAVE_OPENAL AND NOT DYNAMIC_OPENAL)
-  list(APPEND EXTRA_DEFS -DCAPI_LINK_OPENAL)
-endif()
-if(HAVE_OPENAL)
   list(APPEND SOURCES
     capi/openal_api.cpp
     output/audio/AudioOutputOpenAL.cpp
     )
+  list(APPEND EXTRA_LIBS OpenAL::OpenAL)
+  list(APPEND EXTRA_DEFS -DCAPI_LINK_OPENAL -DHEADER_OPENAL_PREFIX -DQTAV_HAVE_OPENAL=1)
 endif()
 
 if (APPLE)
@@ -133,18 +120,12 @@ if (APPLE)
         codec/video/SurfaceInteropIOSurface.mm
         )
     endif()
+    list(APPEND EXTRA_DEFS -DCAPI_LINK_ASS -DQTAV_HAVE_VIDEOTOOLBOX=1)
   endif()
 
   list(APPEND SOURCES output/audio/AudioOutputAudioToolbox.cpp)
   list(APPEND EXTRA_LIBS "-framework CoreFoundation" "-framework AudioToolbox" "-framework OpenGL")
 endif()
-
-set(DEP_H  OPENAL VIDEOTOOLBOX)
-foreach (D ${DEP_H})
-  if (${D})
-    ADD_DEFINITIONS(-DQTAV_HAVE_${D}=1)
-  endif()
-endforeach()
 
 set(HAVE_EGL 0)
 set(DYNAMIC_GL 0)
