@@ -219,8 +219,8 @@ VideoFrame VideoDecoderVideoToolbox::frame()
         f = VideoFrame(d.width, d.height, fmt);
         f.setBytesPerLine(pitch);
         // TODO: move to updateFrameInfo
-        f.setTimestamp(double(d.frame->pkt_pts)/1000.0);
-        f.setDisplayAspectRatio(d.getDAR(d.frame));
+        f.setTimestamp(d.frame.timestamp());
+        f.setDisplayAspectRatio(d.frame.getDAR(d.codec_ctx));
         d.updateColorDetails(&f);
         if (d.interop_res) { // zero_copy
             cv::SurfaceInteropCV *interop = new cv::SurfaceInteropCV(d.interop_res);
