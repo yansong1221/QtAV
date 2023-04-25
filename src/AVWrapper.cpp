@@ -256,4 +256,12 @@ namespace QtAV::Wrapper {
 		return *this;
 	}
 
+	void AVCodecContextWrapper::to_avcodec_parameters(AVCodecParameters* par)
+	{
+		if (avcodec_parameters_from_context(par, ctx_) < 0)
+		{
+			throw std::runtime_error("avcodec_parameters_from_context");
+		}
+	}
+
 }

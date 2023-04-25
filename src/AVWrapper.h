@@ -78,6 +78,8 @@ namespace QtAV::Wrapper {
 
 		void reset();
 
+		void to_avcodec_parameters(AVCodecParameters* par);
+
 		const AVCodecContext* data() const;
 		AVCodecContext* data();
 

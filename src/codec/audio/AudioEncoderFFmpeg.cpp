@@ -84,7 +84,7 @@ bool AudioEncoderFFmpegPrivate::open()
         qWarning() << "Can not find encoder for codec " << codec_name;
         return false;
     }
-    avctx = avcodec_alloc_context3(codec);
+    avctx.assign(codec);
 
     // reset format_used to user defined format. important to update default format if format is invalid
     format_used = format;

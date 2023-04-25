@@ -26,6 +26,7 @@
 #include "QtAV/AudioEncoder.h"
 #include "utils/internal.h"
 #include "utils/Logger.h"
+#include "AVWrapper.h"
 
 namespace QtAV {
 static const char kFileScheme[] = "file:";
@@ -121,8 +122,7 @@ AVStream *AVMuxer::Private::addStream(AVFormatContext* ctx, const QString &codec
     s->id = ctx->nb_streams - 1;
     s->time_base = kTB;
 
-    AVCodecContext* c = avcodec_alloc_context3(codec);
-    avcodec_parameters_to_context(c, s->codecpar);
+    Wrapper::AVCodecContextWrapper c(s->codecpar);
     
 	c->codec_id = codec->id;
 	// Using codec->time_base is deprecated, but needed for older lavf.
@@ -132,8 +132,7 @@ AVStream *AVMuxer::Private::addStream(AVFormatContext* ctx, const QString &codec
 		c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	// expose avctx to encoder and set properties in encoder?
 	// list codecs for a given format in ui
-    avcodec_parameters_from_context(s->codecpar, c);
-    avcodec_free_context(&c);
+    c.to_avcodec_parameters(s->codecpar);
     return s;
 }
 
@@ -146,8 +145,7 @@ bool AVMuxer::Private::prepareStreams()
     if (venc) {
         AVStream *s = addStream(format_ctx, venc->codecName(), fmt->video_codec);
         if (s) {
-            AVCodecContext* c = avcodec_alloc_context3(nullptr);
-            avcodec_parameters_to_context(c, s->codecpar);
+            Wrapper::AVCodecContextWrapper c(s->codecpar);
 
             c->bit_rate = venc->bitRate();
             c->width = venc->width();
@@ -155,8 +153,7 @@ bool AVMuxer::Private::prepareStreams()
             /// MUST set after encoder is open to ensure format is valid and the same
             c->pix_fmt = (AVPixelFormat)VideoFormat::pixelFormatToFFmpeg(venc->pixelFormat());
 
-			avcodec_parameters_from_context(s->codecpar, c);
-			avcodec_free_context(&c);
+			c.to_avcodec_parameters(s->codecpar);
 
             // Set avg_frame_rate based on encoder frame_rate
             s->avg_frame_rate = av_d2q(venc->frameRate(), venc->frameRate()*1001.0+2);
@@ -167,8 +164,7 @@ bool AVMuxer::Private::prepareStreams()
     if (aenc) {
         AVStream *s = addStream(format_ctx, aenc->codecName(), fmt->audio_codec);
         if (s) {
-			AVCodecContext* c = avcodec_alloc_context3(nullptr);
-			avcodec_parameters_to_context(c, s->codecpar);
+            Wrapper::AVCodecContextWrapper c(s->codecpar);
 
             c->bit_rate = aenc->bitRate();
             /// MUST set after encoder is open to ensure format is valid and the same
@@ -178,7 +174,7 @@ bool AVMuxer::Private::prepareStreams()
             c->channels = aenc->audioFormat().channels();
             c->bits_per_raw_sample = aenc->audioFormat().bytesPerSample()*8; // need??
 
-            AVCodecContext *avctx = (AVCodecContext *) aenc->codecContext();
+            AVCodecContext *avctx = aenc->codecContext();
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(56,5,100)
             c->initial_padding = avctx->initial_padding;
 #else
@@ -188,9 +184,7 @@ bool AVMuxer::Private::prepareStreams()
                 c->extradata = avctx->extradata;
                 c->extradata_size = avctx->extradata_size;
             }
-			avcodec_parameters_from_context(s->codecpar, c);
-			avcodec_free_context(&c);
-
+            c.to_avcodec_parameters(s->codecpar);
             audio_streams.push_back(s->id);
         }
     }
