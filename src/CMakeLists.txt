@@ -30,6 +30,7 @@ endif()
 
 if(NOT FFMPEG_FOUND)
   find_package(FFmpeg REQUIRED)
+  FFMPEG_FIND(libavresample   avresample   avresample.h)
   set(FFMPEG_AVFORMAT_FOUND ${FFMPEG_libavformat_FOUND} CACHE BOOL "")
   set(FFMPEG_AVCODEC_FOUND ${FFMPEG_libavcodec_FOUND} CACHE BOOL "")
   set(FFMPEG_SWSCALE_FOUND ${FFMPEG_libswscale_FOUND} CACHE BOOL "")
@@ -54,7 +55,7 @@ endif()
 
 if (NOT FFMPEG_AVRESAMPLE_FOUND AND NOT FFMPEG_SWRESAMPLE_FOUND)
     message(FATAL_ERROR "libswresample or libavresample is required")
-endif()
+endif() 
 
 if(FFMPEG_AVRESAMPLE_FOUND)
   list(APPEND EXTRA_DEFS -DQTAV_HAVE_AVRESAMPLE=1) 
@@ -76,16 +77,6 @@ if(ASS_FOUND)
   )
   list(APPEND EXTRA_LIBS ASS::ASS)
   list(APPEND EXTRA_DEFS -DCAPI_LINK_ASS -DQTAV_HAVE_LIBASS=1)
-endif()
-
-find_package(OpenAL CONFIG)
-if(OPENAL_FOUND)
-  list(APPEND SOURCES
-    capi/openal_api.cpp
-    output/audio/AudioOutputOpenAL.cpp
-    )
-  list(APPEND EXTRA_LIBS OpenAL::OpenAL)
-  list(APPEND EXTRA_DEFS -DCAPI_LINK_OPENAL -DHEADER_OPENAL_PREFIX -DQTAV_HAVE_OPENAL=1)
 endif()
 
 if (APPLE)
@@ -345,12 +336,28 @@ if(WIN32 OR WindowsStore OR WindowsPhone)
     )
   endif()
 endif()
-check_library_exists(portaudio Pa_Initialize "" HAVE_PORTAUDIO)
-if(HAVE_PORTAUDIO)
-  list(APPEND SOURCES output/audio/AudioOutputPortAudio.cpp)
-  list(APPEND EXTRA_DEFS -DQTAV_HAVE_PORTAUDIO=1)
-  list(APPEND EXTRA_LIBS portaudio)
+
+find_package(OpenAL CONFIG)
+if(OPENAL_FOUND)
+  list(APPEND SOURCES
+    capi/openal_api.cpp
+    output/audio/AudioOutputOpenAL.cpp
+    )
+  list(APPEND EXTRA_LIBS OpenAL::OpenAL)
+  list(APPEND EXTRA_DEFS -DCAPI_LINK_OPENAL -DHEADER_OPENAL_PREFIX -DQTAV_HAVE_OPENAL=1)
+else()
+  find_package(portaudio CONFIG)
+  if (TARGET portaudio_static OR TARGET portaudio)
+      list(APPEND SOURCES output/audio/AudioOutputPortAudio.cpp)
+      list(APPEND EXTRA_DEFS -DQTAV_HAVE_PORTAUDIO=1)
+      if (TARGET portaudio_static)
+        list(APPEND EXTRA_LIBS portaudio_static)
+      else()
+        list(APPEND EXTRA_LIBS portaudio)
+      endif()
+  endif()
 endif()
+
 check_library_exists(pulse pa_threaded_mainloop_new "" HAVE_PULSE)
 if(HAVE_PULSE)
   list(APPEND SOURCES output/audio/AudioOutputPulse.cpp)
