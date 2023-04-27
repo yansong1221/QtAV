@@ -17,20 +17,33 @@ if(PKG_CONFIG_FOUND)
   pkg_check_modules(PC_ASS libass QUIET)
 endif()
 
-find_path(ASS_INCLUDE_DIR NAMES ass/ass.h
-                          PATHS ${PC_ASS_INCLUDEDIR})
-find_library(ASS_LIBRARY NAMES ass libass
-                         PATHS ${PC_ASS_LIBDIR})
+include(FindPackageHandleStandardArgs)
+include(SelectLibraryConfigurations)
+include(CMakeFindDependencyMacro)
+
+set(SEARCH_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
+
+find_path(ASS_INCLUDE_DIR NAMES ass/ass.h PATHS ${SEARCH_PATH}/include NO_DEFAULT_PATH)
+
+find_library(ASS_LIBRARY_RELEASE NAMES ass libass PATHS ${SEARCH_PATH}/lib/ NO_DEFAULT_PATH)
+find_library(ASS_LIBRARY_DEBUG NAMES ass libass PATHS ${SEARCH_PATH}/debug/lib/ NO_DEFAULT_PATH)
+
+SET(ASS_LIBRARY
+  debug ${ASS_LIBRARY_DEBUG}
+  optimized ${ASS_LIBRARY_RELEASE}
+)
+set(ASS_VERSION ${PC_ASS_VERSION})
 
 find_package(Freetype)
 find_package(harfbuzz CONFIG)
 
-find_library(ASS_DEPEND_FRIBIDI_LIBRARY NAMES fribidi)
+find_library(ASS_DEPEND_FRIBIDI_LIBRARY_DEBUG NAMES fribidi PATHS ${SEARCH_PATH}/lib/ NO_DEFAULT_PATH)
+find_library(ASS_DEPEND_FRIBIDI_LIBRARY_RELEASE NAMES fribidi PATHS ${SEARCH_PATH}/debug/lib/ NO_DEFAULT_PATH)
+SET(ASS_DEPEND_FRIBIDI_LIBRARY
+  debug ${ASS_DEPEND_FRIBIDI_LIBRARY_DEBUG}
+  optimized ${ASS_DEPEND_FRIBIDI_LIBRARY_RELEASE}
+)
 
-
-set(ASS_VERSION ${PC_ASS_VERSION})
-
-include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ASS
                                   REQUIRED_VARS 
 
@@ -41,17 +54,11 @@ find_package_handle_standard_args(ASS
                                   harfbuzz_FOUND
 
                                   VERSION_VAR ASS_VERSION)
+set(ASS_FOUND TRUE)
 
-if(ASS_FOUND)
-  set(ASS_LIBRARIES ${ASS_LIBRARY} ${ASS_DEPEND_LIBRARYS} Freetype::Freetype harfbuzz harfbuzz::harfbuzz ${ASS_DEPEND_FRIBIDI_LIBRARY})
-  set(ASS_INCLUDE_DIRS ${ASS_INCLUDE_DIR})
-
-  if(NOT TARGET ASS::ASS)
-    add_library(ASS::ASS INTERFACE IMPORTED)
-    set_target_properties(ASS::ASS PROPERTIES
-    INTERFACE_LINK_LIBRARIES  "${ASS_LIBRARIES}"
-    INTERFACE_INCLUDE_DIRECTORIES  "${ASS_INCLUDE_DIRS}")
-  endif()
+if(NOT TARGET ASS::ASS)
+  add_library(ASS::ASS INTERFACE IMPORTED)
+  target_link_libraries(ASS::ASS INTERFACE ${ASS_LIBRARY} Freetype::Freetype harfbuzz::harfbuzz ${ASS_DEPEND_FRIBIDI_LIBRARY})
+  target_include_directories(ASS::ASS INTERFACE ${ASS_INCLUDE_DIR})
 endif()
 
-mark_as_advanced(ASS_INCLUDE_DIRS ASS_LIBRARIES)
