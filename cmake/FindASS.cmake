@@ -13,6 +13,8 @@
 #
 #   ASS::ASS   - The ASS library
 
+find_package(PkgConfig)
+
 if(PKG_CONFIG_FOUND)
   pkg_check_modules(PC_ASS libass QUIET)
 endif()
@@ -20,6 +22,7 @@ endif()
 include(FindPackageHandleStandardArgs)
 include(SelectLibraryConfigurations)
 include(CMakeFindDependencyMacro)
+
 
 set(SEARCH_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
 

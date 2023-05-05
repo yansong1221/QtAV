@@ -46,11 +46,30 @@ public:
     bool processHeader(const QByteArray& codec, const QByteArray& data) Q_DECL_OVERRIDE;
     SubtitleFrame processLine(const QByteArray& data, qreal pts = -1, qreal duration = 0) Q_DECL_OVERRIDE;
     QString getText(qreal pts) const Q_DECL_OVERRIDE;
+	QImage getImage(qreal pts, QRect* boundingRect = 0) Q_DECL_OVERRIDE;
+	SubImageSet getSubImages(qreal pts, QRect* boundingRect = 0) Q_DECL_OVERRIDE;
+	void setFontFile(const QString& file) Q_DECL_OVERRIDE {
+        m_helper->setFontFile(file);
+	}
+    void setFontsDir(const QString& dir) Q_DECL_OVERRIDE
+    {
+		m_helper->setFontsDir(dir);
+    }
+    void setFontFileForced(bool force) Q_DECL_OVERRIDE
+    {
+        m_helper->setFontFileForced(force);
+    }
+    bool canRender() const Q_DECL_OVERRIDE { return m_helper->canRender(); }
+protected:
+	void onFrameSizeChanged(int width, int height) Q_DECL_OVERRIDE {
+        return m_helper->onFrameSizeChanged(width, height);
+	}
 private:
     bool processSubtitle();
     Wrapper::AVCodecContextWrapper codec_ctx;
     AVDemuxer m_reader;
     QList<SubtitleFrame> m_frames;
+    SubtitleProcessor* m_helper;
 };
 
 static const SubtitleProcessorId SubtitleProcessorId_FFmpeg = QStringLiteral("qtav.subtitle.processor.ffmpeg");
@@ -61,6 +80,7 @@ FACTORY_REGISTER(SubtitleProcessor, FFmpeg, kName)
 
 SubtitleProcessorFFmpeg::SubtitleProcessorFFmpeg()
 {
+    m_helper = SubtitleProcessor::create("LibASS");
 }
 
 SubtitleProcessorFFmpeg::~SubtitleProcessorFFmpeg()
@@ -243,6 +263,14 @@ QString SubtitleProcessorFFmpeg::getText(qreal pts) const
     }
     return text.trimmed();
 }
+QImage SubtitleProcessorFFmpeg::getImage(qreal pts, QRect* boundingRect)
+{
+    return m_helper->getImage(pts, boundingRect);
+}
+SubImageSet SubtitleProcessorFFmpeg::getSubImages(qreal pts, QRect* boundingRect)
+{
+    return m_helper->getSubImages(pts, boundingRect);
+}
 
 bool SubtitleProcessorFFmpeg::processHeader(const QByteArray &codec, const QByteArray &data)
 {
@@ -265,9 +293,7 @@ bool SubtitleProcessorFFmpeg::processHeader(const QByteArray &codec, const QByte
     codec_ctx.assign(c);
     if (!codec_ctx)
         return false;
-    // no way to get time base. the pts unit used in processLine() is 's', ffmpeg use ms, so set 1/1000 here
-    codec_ctx->time_base.num = 1;
-    codec_ctx->time_base.den = 1000;
+
     if (!data.isEmpty()) {
         av_free(codec_ctx->extradata);
         codec_ctx->extradata = (uint8_t*)av_mallocz(data.size() + AV_INPUT_BUFFER_PADDING_SIZE);
@@ -280,7 +306,8 @@ bool SubtitleProcessorFFmpeg::processHeader(const QByteArray &codec, const QByte
         codec_ctx.reset();
         return false;
     }
-    return true;//codec != QByteArrayLiteral("ass") && codec != QByteArrayLiteral("ssa");
+    return m_helper->processHeader("ass", (const char*)codec_ctx->subtitle_header);
+    //return true;//codec != QByteArrayLiteral("ass") && codec != QByteArrayLiteral("ssa");
 }
 
 SubtitleFrame SubtitleProcessorFFmpeg::processLine(const QByteArray &data, qreal pts, qreal duration)
@@ -288,41 +315,12 @@ SubtitleFrame SubtitleProcessorFFmpeg::processLine(const QByteArray &data, qreal
     //qDebug() << "line: " << data;
     if (!codec_ctx) {
         return SubtitleFrame();
-    }
-    // AV_CODEC_ID_xxx and srt, subrip are available for ffmpeg >= 1.0. AV_CODEC_ID_xxx
-    // TODO: what about other formats?
-    // libav-9: packet data from demuxer contains time and but duration is 0, must decode
-    // Always decode the data because it may contain styles
-    if (false && duration > 0 && (!codec_ctx
-#if QTAV_USE_FFMPEG(LIBAVCODEC)
-            || codec_ctx->codec_id == AV_CODEC_ID_SUBRIP
-#endif
-            || codec_ctx->codec_id == AV_CODEC_ID_SRT
-            )) {
-        SubtitleFrame f;
-        f.begin = pts;
-        f.end = pts + duration;
-        if (data.startsWith("Dialogue:")) // e.g. decoding embedded subtitles
-            f.text = PlainText::fromAss(data.constData());
-        else
-            f.text = QString::fromUtf8(data.constData(), data.size()); //utf-8 is required
-        return f;
-    }
-   
+    }   
     Wrapper::AVPacketWrapper packet;
 
     packet->size = data.size();
     packet->data = (uint8_t*)data.constData();
-    /*
-     * ffmpeg <2.5: AVPakcet.data has original text including time info, decoder use that info to get correct time
-     * "Dialogue: 0,0:00:20.21,0:00:22.96,*Default,NTP,0000,0000,0000,blablabla
-     * ffmpeg >=2.5: AVPakcet.data changed, we have to set correct pts & duration for packet to be decoded
-     * 16,0,*Default,NTP,0000,0000,0000,,blablabla
-     */
-    // no codec_ctx for internal sub
-    const double unit = 1.0/av_q2d(codec_ctx->time_base); //time_base is deprecated, use framerate since 17085a0, check FF_API_AVCTX_TIMEBASE
-    packet->pts = pts * unit;
-    packet->duration = duration * unit;
+
     AVSubtitle sub;
     memset(&sub, 0, sizeof(sub));
     int got_subtitle = 0;
@@ -331,17 +329,17 @@ SubtitleFrame SubtitleProcessorFFmpeg::processLine(const QByteArray &data, qreal
         avsubtitle_free(&sub);
         return SubtitleFrame();
     }
+    
     SubtitleFrame frame;
     // start_display_time and duration are in ms
-    frame.begin = pts + qreal(sub.start_display_time)/1000.0;
-    frame.end = pts + qreal(sub.end_display_time)/1000.0;
+    frame.begin = pts;
+    frame.end = pts + duration;
     //qDebug() << QTime(0, 0, 0).addMSecs(frame.begin*1000.0) << "-" << QTime(0, 0, 0).addMSecs(frame.end*1000.0) << " fmt: " << sub.format << " pts: " << m_reader.packet().pts //sub.pts
       //       << " rects: " << sub.num_rects << " end: " << sub.end_display_time;
     for (unsigned i = 0; i < sub.num_rects; i++) {
         switch (sub.rects[i]->type) {
         case SUBTITLE_ASS:
-            //qDebug("ass frame: %s", sub.rects[i]->ass);
-            frame.text.append(PlainText::fromAss(sub.rects[i]->ass)).append(ushort('\n'));
+            frame = m_helper->processLine(sub.rects[i]->ass, pts, duration);
             break;
         case SUBTITLE_TEXT:
             //qDebug("txt frame: %s", sub.rects[i]->text);
@@ -369,9 +367,6 @@ bool SubtitleProcessorFFmpeg::processSubtitle()
         return false;
     }
     codec_ctx = m_reader.playSubtitleCodecContext();
-	// no way to get time base. the pts unit used in processLine() is 's', ffmpeg use ms, so set 1/1000 here
-    codec_ctx->time_base.num = 1;
-    codec_ctx->time_base.den = 1000;
 
     const AVCodec *dec = avcodec_find_decoder(codec_ctx->codec_id);
     const AVCodecDescriptor *dec_desc = avcodec_descriptor_get(codec_ctx->codec_id);
@@ -397,6 +392,8 @@ bool SubtitleProcessorFFmpeg::processSubtitle()
         av_dict_free(&codec_opts);
         return false;
     }
+    m_helper->processHeader("ass",(const char*)codec_ctx->subtitle_header);
+
     while (!m_reader.atEnd()) {
         if (!m_reader.readFrame()) { // eof or other errors
             continue;
@@ -406,9 +403,9 @@ bool SubtitleProcessorFFmpeg::processSubtitle()
         const Packet pkt = m_reader.packet();
         if (!pkt.isValid())
             continue;
-        SubtitleFrame frame = processLine(pkt.data, pkt.pts, pkt.duration);
-        if (frame.isValid())
-            m_frames.append(frame);
+        auto frame = processLine(pkt.data, pkt.pts, pkt.duration);
+		if (frame.isValid())
+			m_frames.append(frame);
     }
     avcodec_close(codec_ctx);
     codec_ctx.reset();

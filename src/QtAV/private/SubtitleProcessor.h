@@ -102,7 +102,7 @@ private:
     template<class C> static SubtitleProcessor* create() { return new C();}
     typedef SubtitleProcessor* (*SubtitleProcessorCreator)();
     static bool Register(SubtitleProcessorId id, SubtitleProcessorCreator, const char *name);
-protected:
+public:
     // default do nothing
     virtual void onFrameSizeChanged(int width, int height);
 private:

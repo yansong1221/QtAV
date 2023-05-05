@@ -1149,7 +1149,11 @@ bool AVDemuxer::unload()
         d->input_format = 0;
         // no delete. may be used in next load
         if (d->input)
-            d->input->release();
+        {
+			d->input->setProperty("device", QVariant());        
+			d->input->release();
+        }
+            
         Q_EMIT unloaded();
     }
     return true;
