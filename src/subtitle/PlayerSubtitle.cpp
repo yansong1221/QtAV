@@ -264,7 +264,6 @@ void PlayerSubtitle::connectSignals()
     // try to reload internal subtitle track. if failed and external subtitle is enabled, fallback to external
     connect(m_player, SIGNAL(subtitleStreamChanged(int)), this, SLOT(tryReloadInternalSub()));
     connect(m_sub, SIGNAL(codecChanged()), this, SLOT(tryReload()));
-    connect(m_sub, SIGNAL(enginesChanged()), this, SLOT(tryReload()));
 }
 
 void PlayerSubtitle::disconnectSignals()
@@ -278,7 +277,6 @@ void PlayerSubtitle::disconnectSignals()
     disconnect(m_player, SIGNAL(internalSubtitleHeaderRead(QByteArray,QByteArray)), this, SLOT(processInternalSubtitleHeader(QByteArray,QByteArray)));
     disconnect(m_player, SIGNAL(internalSubtitleTracksChanged(QVariantList)), this, SLOT(updateInternalSubtitleTracks(QVariantList)));
     disconnect(m_sub, SIGNAL(codecChanged()), this, SLOT(tryReload()));
-    disconnect(m_sub, SIGNAL(enginesChanged()), this, SLOT(tryReload()));
 }
 
 } //namespace QtAV

@@ -146,7 +146,6 @@ private slots:
     void toggleSubtitleAutoLoad(bool value);
     void openSubtitle();
     void setSubtitleCharset(const QString& charSet);
-    void setSubtitleEngine(const QString& value);
 
     void changeClockType(QAction* action);
     void syncVolumeUi(qreal value);

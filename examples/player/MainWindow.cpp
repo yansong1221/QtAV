@@ -420,23 +420,8 @@ void MainWindow::setupUi()
     wgt = new QWidget();
     hb = new QHBoxLayout();
     wgt->setLayout(hb);
-    hb->addWidget(new QLabel(tr("Engine")));
-    QComboBox *box = new QComboBox();
-    hb->addWidget(box);
-    pWA = new QWidgetAction(0);
-    pWA->setDefaultWidget(wgt);
-    subMenu->addAction(pWA); //must add action after the widget action is ready. is it a Qt bug?
-    box->addItem(QString::fromLatin1("FFmpeg"), QString::fromLatin1("FFmpeg"));
-    box->addItem(QString::fromLatin1("LibASS"), QString::fromLatin1("LibASS"));
-    connect(box, SIGNAL(activated(QString)), SLOT(setSubtitleEngine(QString)));
-    mpSubtitle->setEngines(QStringList() << box->itemData(box->currentIndex()).toString());
-    box->setToolTip(tr("FFmpeg supports more subtitles but only render plain text") + QString::fromLatin1("\n") + tr("LibASS supports ass styles"));
-
-    wgt = new QWidget();
-    hb = new QHBoxLayout();
-    wgt->setLayout(hb);
     hb->addWidget(new QLabel(tr("Charset")));
-    box = new QComboBox();
+    QComboBox* box = new QComboBox();
     hb->addWidget(box);
     pWA = new QWidgetAction(0);
     pWA->setDefaultWidget(wgt);
@@ -1609,15 +1594,6 @@ void MainWindow::setSubtitleCharset(const QString &charSet)
     if (!box)
         return;
     mpSubtitle->setCodec(box->itemData(box->currentIndex()).toByteArray());
-}
-
-void MainWindow::setSubtitleEngine(const QString &value)
-{
-    Q_UNUSED(value)
-    QComboBox *box = qobject_cast<QComboBox*>(sender());
-    if (!box)
-        return;
-    mpSubtitle->setEngines(QStringList() << box->itemData(box->currentIndex()).toString());
 }
 
 void MainWindow::changeClockType(QAction *action)

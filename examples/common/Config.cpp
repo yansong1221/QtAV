@@ -105,7 +105,6 @@ public:
         settings.beginGroup(QString::fromLatin1("subtitle"));
         settings.setValue(QString::fromLatin1("enabled"), subtitle_enabled);
         settings.setValue(QString::fromLatin1("autoLoad"), subtitle_autoload);
-        settings.setValue(QString::fromLatin1("engines"), subtitle_engines);
         settings.setValue(QString::fromLatin1("delay"), subtitle_delay);
         settings.setValue(QString::fromLatin1("font"), subtitle_font);
         settings.setValue(QString::fromLatin1("color"), subtitle_color);
@@ -180,7 +179,6 @@ public:
     bool avfilterAudio_on;
     QString avfilterAudio;
 
-    QStringList subtitle_engines;
     bool subtitle_autoload;
     bool subtitle_enabled;
     QFont subtitle_font;
@@ -329,7 +327,6 @@ void Config::reload()
     settings.beginGroup(QString::fromLatin1("subtitle"));
     setSubtitleAutoLoad(settings.value(QString::fromLatin1("autoLoad"), true).toBool());
     setSubtitleEnabled(settings.value(QString::fromLatin1("enabled"), true).toBool());
-    setSubtitleEngines(settings.value(QString::fromLatin1("engines"), QStringList() << QString::fromLatin1("FFmpeg") << QString::fromLatin1("LibASS")).toStringList());
     setSubtitleDelay(settings.value(QString::fromLatin1("delay"), 0.0).toInt());
     QFont f;
     f.setPointSize(20);
@@ -483,21 +480,6 @@ Config& Config::setCaptureQuality(int quality)
         return *this;
     mpData->capture_quality = quality;
     Q_EMIT captureQualityChanged(quality);
-    Q_EMIT changed();
-    return *this;
-}
-
-QStringList Config::subtitleEngines() const
-{
-    return mpData->subtitle_engines;
-}
-
-Config& Config::setSubtitleEngines(const QStringList &value)
-{
-    if (mpData->subtitle_engines == value)
-        return *this;
-    mpData->subtitle_engines = value;
-    Q_EMIT subtitleEnginesChanged();
     Q_EMIT changed();
     return *this;
 }
