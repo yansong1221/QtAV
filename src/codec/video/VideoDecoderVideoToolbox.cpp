@@ -307,6 +307,7 @@ bool VideoDecoderVideoToolboxPrivate::open()
 {
     if (!prepare())
         return false;
+    restore();
     switch (codec_ctx->profile) { //profile check code is from xbmc
     case FF_PROFILE_H264_HIGH_10: //Apple A7 SoC
     case FF_PROFILE_H264_HIGH_10_INTRA:

@@ -42,11 +42,6 @@ public:
     bool operator !() const { return !isValid();}
     inline bool operator <(const SubtitleFrame& f) const { return end < f.end;}
     inline bool operator <(qreal t) const { return end < t;}
-    inline bool operator==(const SubtitleFrame& f) const {
-        return long long(begin * 1000) == long long(f.begin * 1000) &&
-            long long(end*1000) == long long(f.end*1000) &&
-            text == f.text;
-    }
     bool contains(qreal time) const { return time >= begin && time <= end; }
     qreal begin;
     qreal end;

@@ -32,6 +32,7 @@ VideoFormat::PixelFormat format_from_cv(int cv);
 // https://www.opengl.org/registry/specs/APPLE/rgb_422.txt
 class InteropResourceCVOpenGLES Q_DECL_FINAL : public InteropResource
 {
+    Q_OBJECT
 public:
     InteropResourceCVOpenGLES() : InteropResource()
       , texture_cache(NULL)
