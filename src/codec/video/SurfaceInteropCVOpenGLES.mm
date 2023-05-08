@@ -60,9 +60,9 @@ private:
     CVOpenGLESTextureRef textures[4];
 };
 
-InteropResource* CreateInteropCVOpenGLES()
+InteropResourcePtr CreateInteropCVOpenGLES()
 {
-    return new InteropResourceCVOpenGLES();
+    return InteropResourcePtr(new InteropResourceCVOpenGLES(),&QObject::deleteLater);
 }
 
 bool InteropResourceCVOpenGLES::stridesForWidth(int cvfmt, int width, int *strides, VideoFormat::PixelFormat* outFmt)
