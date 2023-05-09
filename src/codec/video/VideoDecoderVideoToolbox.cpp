@@ -276,6 +276,7 @@ VideoDecoderVideoToolbox::Interop VideoDecoderVideoToolbox::interop() const
 void *VideoDecoderVideoToolboxPrivate::setup(AVCodecContext *avctx)
 {
     Q_UNUSED(avctx);
+    return nullptr;
 }
 
 bool VideoDecoderVideoToolboxPrivate::getBuffer(void **opaque, uint8_t **data)
