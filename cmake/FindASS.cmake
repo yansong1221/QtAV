@@ -35,33 +35,35 @@ SET(ASS_LIBRARY
   debug ${ASS_LIBRARY_DEBUG}
   optimized ${ASS_LIBRARY_RELEASE}
 )
-set(ASS_VERSION ${PC_ASS_VERSION})
+if(ASS_LIBRARY)
+  set(ASS_VERSION ${PC_ASS_VERSION})
 
-find_package(Freetype)
-find_package(harfbuzz CONFIG)
+  find_package(Freetype)
+  find_package(harfbuzz CONFIG)
 
-find_library(ASS_DEPEND_FRIBIDI_LIBRARY_DEBUG NAMES fribidi PATHS ${SEARCH_PATH}/lib/ NO_DEFAULT_PATH)
-find_library(ASS_DEPEND_FRIBIDI_LIBRARY_RELEASE NAMES fribidi PATHS ${SEARCH_PATH}/debug/lib/ NO_DEFAULT_PATH)
-SET(ASS_DEPEND_FRIBIDI_LIBRARY
-  debug ${ASS_DEPEND_FRIBIDI_LIBRARY_DEBUG}
-  optimized ${ASS_DEPEND_FRIBIDI_LIBRARY_RELEASE}
-)
+  find_library(ASS_DEPEND_FRIBIDI_LIBRARY_DEBUG NAMES fribidi PATHS ${SEARCH_PATH}/lib/ NO_DEFAULT_PATH)
+  find_library(ASS_DEPEND_FRIBIDI_LIBRARY_RELEASE NAMES fribidi PATHS ${SEARCH_PATH}/debug/lib/ NO_DEFAULT_PATH)
+  SET(ASS_DEPEND_FRIBIDI_LIBRARY
+    debug ${ASS_DEPEND_FRIBIDI_LIBRARY_DEBUG}
+    optimized ${ASS_DEPEND_FRIBIDI_LIBRARY_RELEASE}
+  )
 
-find_package_handle_standard_args(ASS
-                                  REQUIRED_VARS 
+  set(ASS_FOUND TRUE)
 
-                                  ASS_LIBRARY 
-                                  ASS_INCLUDE_DIR
-                                  ASS_DEPEND_FRIBIDI_LIBRARY
-                                  Freetype_FOUND
-                                  harfbuzz_FOUND
-
-                                  VERSION_VAR ASS_VERSION)
-set(ASS_FOUND TRUE)
-
-if(NOT TARGET ASS::ASS)
-  add_library(ASS::ASS INTERFACE IMPORTED)
-  target_link_libraries(ASS::ASS INTERFACE ${ASS_LIBRARY} Freetype::Freetype harfbuzz::harfbuzz ${ASS_DEPEND_FRIBIDI_LIBRARY})
-  target_include_directories(ASS::ASS INTERFACE ${ASS_INCLUDE_DIR})
+  if(NOT TARGET ASS::ASS)
+    add_library(ASS::ASS INTERFACE IMPORTED)
+    target_link_libraries(ASS::ASS INTERFACE ${ASS_LIBRARY} Freetype::Freetype harfbuzz::harfbuzz ${ASS_DEPEND_FRIBIDI_LIBRARY})
+    target_include_directories(ASS::ASS INTERFACE ${ASS_INCLUDE_DIR})
+  endif()
 endif()
 
+find_package_handle_standard_args(ASS
+REQUIRED_VARS 
+
+ASS_LIBRARY 
+ASS_INCLUDE_DIR
+ASS_DEPEND_FRIBIDI_LIBRARY
+Freetype_FOUND
+harfbuzz_FOUND
+
+VERSION_VAR ASS_VERSION)

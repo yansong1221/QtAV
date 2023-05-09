@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(QTAV)
 
-if (WIN32)
+if(MSVC)
   add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
   add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
 endif()

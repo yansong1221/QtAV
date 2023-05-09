@@ -265,6 +265,11 @@ void Subtitle::setTimestamp(qreal t)
     Q_EMIT contentChanged();
 }
 
+void Subtitle::clear() 
+{
+    priv->reset();
+}
+
 qreal Subtitle::timestamp() const
 {
     return priv->t;

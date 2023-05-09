@@ -41,6 +41,7 @@ class SubtitleFilter;
 class VideoPreviewWidget;
 class DynamicShaderObject;
 class GLSLFilter;
+class VUMeterFilter;
 }
 QT_BEGIN_NAMESPACE
 class QMenu;
@@ -109,6 +110,7 @@ private slots:
     void seek();
     void seek(int);
     void showHideVolumeBar();
+    void setAudioDB();
     void setVolume();
     void tryHideControlBar();
     void tryShowControlBar();
@@ -176,6 +178,7 @@ private:
     QLabel *mpTitle;
     QLabel *mpSpeed;
     Slider *mpTimeSlider, *mpVolumeSlider;
+    QLabel *mpAudioDB;
     QToolButton *mpVolumeBtn;
     QToolButton *mpPlayPauseBtn;
     QToolButton *mpStopBtn, *mpForwardBtn, *mpBackwardBtn;
@@ -201,7 +204,6 @@ private:
     QString mFile;
     QString mTitle;
 
-    QLabel *mpPreview;
 
     DecoderConfigPage *mpDecoderConfigPage;
     VideoEQConfigPage *mpVideoEQ;
@@ -216,6 +218,8 @@ private:
     QtAV::VideoPreviewWidget *m_preview;
     QtAV::DynamicShaderObject *m_shader;
     QtAV::GLSLFilter *m_glsl;
+
+    QtAV::VUMeterFilter *m_VUMeter;
 
     PowerManagement* mpPowerManagement;
 };

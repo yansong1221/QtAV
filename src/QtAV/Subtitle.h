@@ -174,6 +174,7 @@ public Q_SLOTS:
     void load();
     void loadAsync();
     void setTimestamp(qreal t);
+    void clear();
 Q_SIGNALS:
     // TODO: also add to AVPlayer?
     /// empty path if load from raw data
