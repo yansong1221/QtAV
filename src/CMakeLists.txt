@@ -29,7 +29,7 @@ if(EXISTS ${QTAV_SOURCE_DIR}/contrib/capi/capi.h)
 endif()
 
 if(NOT FFMPEG_FOUND)
-  find_package(FFmpeg REQUIRED)
+  find_package(FFMPEG REQUIRED)
   FFMPEG_FIND(libavresample   avresample   avresample.h)
   set(FFMPEG_AVFORMAT_FOUND ${FFMPEG_libavformat_FOUND} CACHE BOOL "")
   set(FFMPEG_AVCODEC_FOUND ${FFMPEG_libavcodec_FOUND} CACHE BOOL "")

@@ -33,6 +33,7 @@
 #include <thread>
 #include <libavcodec/packet.h>
 #include "AVPlayer.h"
+#include <cmath>
 
 #define RESUME_ONCE_ON_SEEK 0
 
@@ -649,7 +650,7 @@ void AVDemuxThread::run()
         Q_EMIT bufferProgressChanged(1);
 
         std::atomic<double> fps = demuxer->frameRate();
-        if(fps<=0 || fps>1000 || isnan(fps.load()))
+        if(fps<=0 || fps>1000 || std::isnan(fps.load()))
             fps = 20;
         qint64 totalFrames = 0;
         qint64 lastTotalFrames = 0;
