@@ -69,13 +69,14 @@ endif()
   
 list(APPEND EXTRA_DEFS -DBUILD_QTAV_LIB -D__STDC_CONSTANT_MACROS)
 
-find_package(ASS)
+find_package(ASS REQUIRED)
 if(ASS_FOUND)
   list(APPEND EXTRA_LIBS ASS::ASS)
   list(APPEND EXTRA_DEFS -DCAPI_LINK_ASS)
-  list(APPEND EXTRA_DEFS -DQTAV_HAVE_LIBASS=1) 
+  list(APPEND EXTRA_DEFS -DQTAV_HAVE_LIBASS=1)
+  list(APPEND SOURCES capi/ass_api.cpp)
 endif()
-list(APPEND SOURCES capi/ass_api.cpp)
+
 
 if (APPLE)
   set(CMAKE_CXX_SYSTEM_FRAMEWORK_SEARCH_FLAG "-F ") # original is "-iframework", lots of build errors
@@ -164,8 +165,8 @@ list(APPEND SOURCES
     subtitle/CharsetDetector.cpp
     subtitle/PlainText.cpp
     subtitle/PlayerSubtitle.cpp
-    subtitle/Subtitle.cpp
     subtitle/SubtitleProcessor.cpp
+    subtitle/Subtitle.cpp
     subtitle/SubImage.cpp
     utils/GPUMemCopy.cpp
     utils/Logger.cpp

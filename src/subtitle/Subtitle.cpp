@@ -68,7 +68,6 @@ public:
         QMutexLocker lock(&mutex);
         Q_UNUSED(lock);
         loaded = false;
-        processor = std::make_unique<SubtitleProcessor>();
         update_text = true;
         update_image = true;
         t = 0;
@@ -230,6 +229,8 @@ QStringList Subtitle::dirs() const
 
 QStringList Subtitle::supportedSuffixes() const
 {
+    if (!priv->processor)
+        return {};
     return priv->processor->supportedTypes();
 }
 
@@ -524,8 +525,7 @@ bool Subtitle::processLine(const QByteArray &data, qreal pts, qreal duration)
     while (it != priv->frames.begin() && f < (*it)) {--it;}
     if (it != priv->frames.begin()) // found in middle, insert before next
         ++it;
-    priv->frames.insert(it, f);
-    priv->itf = it;
+    priv->itf = priv->frames.insert(it, f);
     return true;
 }
 

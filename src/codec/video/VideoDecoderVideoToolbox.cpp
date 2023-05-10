@@ -194,7 +194,25 @@ VideoFrame VideoDecoderVideoToolbox::frame()
     if (pixfmt == VideoFormat::Format_Invalid) {
         qWarning("unsupported cv pixel format: %#x",
                  (quint32) CVPixelBufferGetPixelFormatType(cv_buffer));
-        return VideoFrame();
+        Wrapper::AVFrameWapper cpu_frame;
+        if (av_hwframe_transfer_data(&cpu_frame, &d.frame, 0) < 0)
+            return VideoFrame();
+
+        // it's safe if width, height, pixfmt will not change, only data change
+        VideoFrame frame(cpu_frame->width, cpu_frame->height, VideoFormat((int)cpu_frame->format));
+        frame.setDisplayAspectRatio(cpu_frame.getDAR(d.codec_ctx));
+        frame.setBits(cpu_frame->data);
+        frame.setBytesPerLine(cpu_frame->linesize);
+        // in s. TODO: what about AVFrame.pts? av_frame_get_best_effort_timestamp? move to VideoFrame::from(AVFrame*)
+        frame.setTimestamp((double) cpu_frame->pts / 1000.0);
+        frame.setMetaData(QStringLiteral("avbuf"),
+                          QVariant::fromValue(AVFrameBuffersRef(new AVFrameBuffers(&cpu_frame))));
+        d.updateColorDetails(&frame);
+        if (frame.format().hasPalette()) {
+            frame.setMetaData(QStringLiteral("pallete"),
+                              QByteArray((const char *) cpu_frame->data[1], 256 * 4));
+        }
+        return frame;
     }
 
     uint8_t *src[3];
@@ -339,26 +357,9 @@ bool VideoDecoderVideoToolboxPrivate::open()
     if (av_hwdevice_ctx_create(&hw_device_ctx, hw_device_type, NULL, NULL, 0) < 0)
         return false;
 
-    codec_ctx->hw_device_ctx = av_buffer_ref(hw_device_ctx);
-    switch (out_fmt) {
-    case VideoDecoderVideoToolbox::PixelFormat::NV12:
-        codec_ctx->pix_fmt = AV_PIX_FMT_NV12;
-        break;
-    case VideoDecoderVideoToolbox::PixelFormat::UYVY:
-        codec_ctx->pix_fmt = AV_PIX_FMT_UYVY422;
-        break;
-    case VideoDecoderVideoToolbox::PixelFormat::BGRA:
-        codec_ctx->pix_fmt = AV_PIX_FMT_BGRA;
-        break;
-    case VideoDecoderVideoToolbox::PixelFormat::YUV420P:
-        codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-        break;
-    case VideoDecoderVideoToolbox::PixelFormat::YUYV:
-        codec_ctx->pix_fmt = AV_PIX_FMT_YUYV422;
-        break;
-    default:
-        break;
-    }
+    codec_ctx->hw_device_ctx = hw_device_ctx;
+    codec_ctx->pix_fmt = AV_PIX_FMT_VIDEOTOOLBOX;
+
     releaseUSWC();
     initUSWC(codedWidth(codec_ctx)); // TODO: use stride
     return true;
