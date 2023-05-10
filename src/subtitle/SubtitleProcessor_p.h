@@ -773,13 +773,12 @@ void SubtitleProcessorPrivate::updateFontCache()
 #else
     // will call strdup, so safe to use temp array .toUtf8().constData()
     if (!force_font_file || (!font_file.isEmpty() && !QFile::exists(kFont)))
-        ;
-    ass_set_fonts_dir(
-        m_ass,
-        kFontsDir.isEmpty()
-            ? 0
-            : kFontsDir.toUtf8()
-                  .constData()); // look up fonts in fonts dir can be slow. force font file to skip lookup
+        ass_set_fonts_dir(
+            m_ass,
+            kFontsDir.isEmpty()
+                ? 0
+                : kFontsDir.toUtf8()
+                      .constData()); // look up fonts in fonts dir can be slow. force font file to skip lookup
 #endif
     /* ass_set_fonts:
      * fc/dfp=false(auto font provider): Prefer font provider to find a font(FC needs fonts.conf) in font_dir, or provider's configuration. If failed, try the given font
