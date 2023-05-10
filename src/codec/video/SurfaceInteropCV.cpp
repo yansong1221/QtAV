@@ -41,22 +41,6 @@ static const cv_format cv_formats[] = {
     { 'yuvs', VideoFormat::Format_YUYV }, //kCVPixelFormatType_422YpCbCr8_yuvs
 //#endif
     { 'BGRA', VideoFormat::Format_BGRA32 },
-    { kCVPixelFormatType_24RGB, VideoFormat::Format_RGB24 },
-    { kCVPixelFormatType_24BGR, VideoFormat::Format_BGR24 },
-    { kCVPixelFormatType_32ARGB, VideoFormat::Format_ARGB32 },
-    { kCVPixelFormatType_32BGRA, VideoFormat::Format_BGRA32 },
-    { kCVPixelFormatType_32ABGR, VideoFormat::Format_ABGR32 },
-    { kCVPixelFormatType_32RGBA, VideoFormat::Format_RGBA32 },
-    { kCVPixelFormatType_48RGB, VideoFormat::Format_RGB48 },
-    { kCVPixelFormatType_4444AYpCbCr8, VideoFormat::Format_AYUV444 },
-    { kCVPixelFormatType_444YpCbCr8, VideoFormat::Format_YUV444P },
-    { kCVPixelFormatType_422YpCbCr_4A_8BiPlanar, VideoFormat::Format_YUV422P },
-    { kCVPixelFormatType_420YpCbCr10BiPlanarFullRange, VideoFormat::Format_YUV420P10BE },
-    { kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange, VideoFormat::Format_YUV420P10LE },
-    { kCVPixelFormatType_422YpCbCr10BiPlanarFullRange, VideoFormat::Format_YUV422P10BE },
-    { kCVPixelFormatType_422YpCbCr10BiPlanarVideoRange, VideoFormat::Format_YUV422P10LE },
-    { kCVPixelFormatType_444YpCbCr10BiPlanarFullRange, VideoFormat::Format_YUV444P10BE },
-    { kCVPixelFormatType_444YpCbCr10BiPlanarVideoRange, VideoFormat::Format_YUV444P10LE },
     { 0, VideoFormat::Format_Invalid }
 };
 namespace cv {
