@@ -110,7 +110,6 @@ private slots:
     void seek();
     void seek(int);
     void showHideVolumeBar();
-    void setAudioDB();
     void setVolume();
     void tryHideControlBar();
     void tryShowControlBar();
@@ -178,7 +177,6 @@ private:
     QLabel *mpTitle;
     QLabel *mpSpeed;
     Slider *mpTimeSlider, *mpVolumeSlider;
-    QLabel *mpAudioDB;
     QToolButton *mpVolumeBtn;
     QToolButton *mpPlayPauseBtn;
     QToolButton *mpStopBtn, *mpForwardBtn, *mpBackwardBtn;
@@ -218,8 +216,6 @@ private:
     QtAV::VideoPreviewWidget *m_preview;
     QtAV::DynamicShaderObject *m_shader;
     QtAV::GLSLFilter *m_glsl;
-
-    QtAV::VUMeterFilter *m_VUMeter;
 
     PowerManagement* mpPowerManagement;
 };

@@ -126,9 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowIcon(QIcon(QString::fromLatin1(":/QtAV.svg")));
     mpOSD = new OSDFilter(this);
     mpSubtitle = new SubtitleFilter(this);
-    m_VUMeter = new VUMeterFilter(this);
-    connect(m_VUMeter, &VUMeterFilter::leftLevelChanged, this, &MainWindow::setAudioDB);
-    connect(m_VUMeter, &VUMeterFilter::rightLevelChanged, this, &MainWindow::setAudioDB);
+
     mpChannelAction = 0;
     mpChannelMenu = 0;
     mpAudioTrackAction = 0;
@@ -172,7 +170,6 @@ void MainWindow::initPlayer()
     setRenderer(vo);
     //mpSubtitle->installTo(mpPlayer); //filter on frame
     mpSubtitle->setPlayer(mpPlayer);
-    m_VUMeter->installTo(mpPlayer);
     //mpPlayer->setAudioOutput(AudioOutputFactory::create(AudioOutputId_OpenAL));
     EventFilter *ef = new EventFilter(mpPlayer);
     qApp->installEventFilter(ef);
@@ -278,9 +275,6 @@ void MainWindow::setupUi()
     mpCaptureBtn->setIcon(QIcon(QString::fromLatin1(":/theme/dark/capture.svg")));
     mpVolumeBtn = new QToolButton();
     mpVolumeBtn->setIcon(QIcon(QString::fromLatin1(":/theme/dark/sound.svg")));
-
-    mpAudioDB = new QLabel();
-    setAudioDB();
 
     mpVolumeSlider = new Slider();
     mpVolumeSlider->hide();
@@ -522,7 +516,6 @@ void MainWindow::setupUi()
     controlLayout->addWidget(mpTitle);
     QSpacerItem *space = new QSpacerItem(mpPlayPauseBtn->width(), mpPlayPauseBtn->height(), QSizePolicy::MinimumExpanding);
     controlLayout->addSpacerItem(space);
-    controlLayout->addWidget(mpAudioDB);
     controlLayout->addWidget(mpVolumeSlider);
     controlLayout->addWidget(mpVolumeBtn);
     controlLayout->addWidget(mpCaptureBtn);
@@ -933,13 +926,6 @@ void MainWindow::showHideVolumeBar()
     } else {
         mpVolumeSlider->hide();
     }
-}
-
-void MainWindow::setAudioDB() 
-{
-    mpAudioDB->setText(QString::asprintf("( %f dB ) ( %f dB )",
-        m_VUMeter->leftLevel(),
-       m_VUMeter->rightLevel()));
 }
 
 void MainWindow::setVolume()
