@@ -68,6 +68,7 @@
 #include "QtAV/GLSLFilter.h"
 #endif
 #include "QtAV/VUMeterFilter.h"
+#include "QtAV/AVTranscoder.h"
 /*
  *TODO:
  * disable a/v actions if player is 0;
@@ -210,6 +211,21 @@ void MainWindow::initPlayer()
 
     connect(mpCaptureBtn, SIGNAL(clicked()), mpPlayer->videoCapture(), SLOT(capture()));
 
+
+    mpTranscoder = new QtAV::AVTranscoder(this);
+    mpTranscoder->setMediaSource(mpPlayer);
+    mpTranscoder->setOutputMedia(QStandardPaths::writableLocation(QStandardPaths::MoviesLocation)
+                                 + "/1.mp4");
+    mpTranscoder->createVideoEncoder();
+    mpTranscoder->createAudioEncoder();
+
+    connect(mpVedioRecordBtn, &QToolButton::toggled, this, [this](bool checked) {
+        if (checked)
+            mpTranscoder->start();
+        else
+            mpTranscoder->stop();
+    });
+
     emit ready(); //emit this signal after connection. otherwise the slots may not be called for the first time
 }
 
@@ -273,6 +289,12 @@ void MainWindow::setupUi()
     mpCaptureBtn = new QToolButton();
     mpCaptureBtn->setToolTip(tr("Capture"));
     mpCaptureBtn->setIcon(QIcon(QString::fromLatin1(":/theme/dark/capture.svg")));
+
+    mpVedioRecordBtn = new QToolButton();
+    mpVedioRecordBtn->setText(tr("VedioRecord"));
+    mpVedioRecordBtn->setToolTip(tr("VedioRecord"));
+    mpVedioRecordBtn->setCheckable(true);
+
     mpVolumeBtn = new QToolButton();
     mpVolumeBtn->setIcon(QIcon(QString::fromLatin1(":/theme/dark/sound.svg")));
 
@@ -519,6 +541,7 @@ void MainWindow::setupUi()
     controlLayout->addWidget(mpVolumeSlider);
     controlLayout->addWidget(mpVolumeBtn);
     controlLayout->addWidget(mpCaptureBtn);
+    controlLayout->addWidget(mpVedioRecordBtn);
     controlLayout->addWidget(mpPlayPauseBtn);
     controlLayout->addWidget(mpStopBtn);
     controlLayout->addWidget(mpBackwardBtn);

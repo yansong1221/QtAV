@@ -42,6 +42,7 @@ class VideoPreviewWidget;
 class DynamicShaderObject;
 class GLSLFilter;
 class VUMeterFilter;
+class AVTranscoder;
 }
 QT_BEGIN_NAMESPACE
 class QMenu;
@@ -181,7 +182,7 @@ private:
     QToolButton *mpPlayPauseBtn;
     QToolButton *mpStopBtn, *mpForwardBtn, *mpBackwardBtn;
     QToolButton *mpOpenBtn;
-    QToolButton *mpInfoBtn, *mpMenuBtn, *mpSetupBtn, *mpCaptureBtn;
+    QToolButton *mpInfoBtn, *mpMenuBtn, *mpSetupBtn, *mpCaptureBtn,*mpVedioRecordBtn;
     QMenu *mpMenu;
     QAction *mpVOAction, *mpARAction; //remove mpVOAction if vo.id() is supported
     QAction *mpRepeatEnableAction;
@@ -218,6 +219,7 @@ private:
     QtAV::GLSLFilter *m_glsl;
 
     PowerManagement* mpPowerManagement;
+    QtAV::AVTranscoder *mpTranscoder;
 };
 
 

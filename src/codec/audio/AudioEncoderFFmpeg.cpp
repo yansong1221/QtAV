@@ -69,9 +69,11 @@ bool AudioEncoderFFmpegPrivate::open()
 {
     if (codec_name.isEmpty()) {
         // copy ctx from muxer by copyAVCodecContext
-        const AVCodec *codec = avcodec_find_encoder(avctx->codec_id);
-        AV_ENSURE_OK(avcodec_open2(avctx, codec, &dict), false);
-        return true;
+        const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_AC3);
+        if (!codec)
+            return false;
+
+        codec_name = codec->name;
     }
     const AVCodec *codec = avcodec_find_encoder_by_name(codec_name.toUtf8().constData());
     if (!codec) {

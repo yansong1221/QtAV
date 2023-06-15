@@ -145,6 +145,8 @@ bool AVMuxer::Private::prepareStreams()
     if (venc) {
         AVStream *s = addStream(format_ctx, venc->codecName(), fmt->video_codec);
         if (s) {
+            s->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
+
             Wrapper::AVCodecContextWrapper c(s->codecpar);
 
             c->bit_rate = venc->bitRate();
@@ -164,6 +166,7 @@ bool AVMuxer::Private::prepareStreams()
     if (aenc) {
         AVStream *s = addStream(format_ctx, aenc->codecName(), fmt->audio_codec);
         if (s) {
+            s->codecpar->codec_type = AVMEDIA_TYPE_AUDIO;
             Wrapper::AVCodecContextWrapper c(s->codecpar);
 
             c->bit_rate = aenc->bitRate();

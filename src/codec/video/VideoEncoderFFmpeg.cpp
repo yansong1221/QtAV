@@ -117,9 +117,14 @@ bool VideoEncoderFFmpegPrivate::open()
     nb_encoded = 0LL;
     if (codec_name.isEmpty()) {
         // copy ctx from muxer by copyAVCodecContext
-        const AVCodec *codec = avcodec_find_encoder(avctx->codec_id);
-        AV_ENSURE_OK(avcodec_open2(avctx, codec, &dict), false);
-        return true;
+        const AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+        if (!codec)
+            return false;
+
+        codec_name = codec->name;
+        //avctx.assign(codec);
+        //AV_ENSURE_OK(avcodec_open2(avctx, codec, &dict), false);
+        //return true;
     }
     const AVCodec *codec = avcodec_find_encoder_by_name(codec_name.toUtf8().constData());
     if (!codec) {
@@ -132,7 +137,7 @@ bool VideoEncoderFFmpegPrivate::open()
         qWarning() << "Can not find encoder for codec " << codec_name;
         return false;
     }
-    avctx = avcodec_alloc_context3(codec);
+    avctx.assign(codec);
     avctx->width = width; // coded_width works, why?
     avctx->height = height;
     // reset format_used to user defined format. important to update default format if format is invalid
