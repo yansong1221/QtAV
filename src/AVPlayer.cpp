@@ -1396,29 +1396,32 @@ void AVPlayer::playInternal()
     d->stop_position_norm = normalizedPosition(d->stop_position);
     // FIXME: if call play() frequently playInternal may not be called if disconnect here
     d->shouldLoadInternal = false;
-    bool ret;
-    QMetaObject::invokeMethod(this, [this, &ret]() {
-        ret = d->setupAudioThread(this);
-    }, Qt::BlockingQueuedConnection);
-    if (!ret) {
-        d->read_thread->setAudioThread(0); //set 0 before delete. ptr is used in demux thread when set 0
-        if (d->athread) {
-            qDebug("release audio thread.");
-            delete d->athread;
-            d->athread = 0;//shared ptr?
-        }
-    }
-    QMetaObject::invokeMethod(this, [this, &ret]() {
-        ret = d->setupVideoThread(this);
-    }, Qt::BlockingQueuedConnection);
-    if (!ret) {
-        d->read_thread->setVideoThread(0); //set 0 before delete. ptr is used in demux thread when set 0
-        if (d->vthread) {
-            qDebug("release video thread.");
-            delete d->vthread;
-            d->vthread = 0;//shared ptr?
-        }
-    }
+
+    QMetaObject::invokeMethod(
+        this,
+        [this]() {
+            if (!d->setupAudioThread(this)) {
+                d->read_thread->setAudioThread(
+                    0); //set 0 before delete. ptr is used in demux thread when set 0
+                if (d->athread) {
+                    qDebug("release audio thread.");
+                    delete d->athread;
+                    d->athread = 0; //shared ptr?
+                }
+            }
+
+            if (!d->setupVideoThread(this)) {
+                d->read_thread->setVideoThread(
+                    0); //set 0 before delete. ptr is used in demux thread when set 0
+                if (d->vthread) {
+                    qDebug("release video thread.");
+                    delete d->vthread;
+                    d->vthread = 0; //shared ptr?
+                }
+            }
+        },
+        Qt::BlockingQueuedConnection);
+    
     if (!d->athread && !d->vthread) {
         d->loaded = false;
         qWarning("load failed");

@@ -1182,6 +1182,7 @@ void MainWindow::initAudioTrackMenu()
         mpAudioTrackAction = 0;
         goto end;
     }
+    mpAudioTrackAction = 0;
     track = mpPlayer->currentAudioStream();
     as = mpAudioTrackMenu->actions();
     tracks = mpPlayer->audioStreamCount();
