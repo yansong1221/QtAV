@@ -304,16 +304,16 @@ bool VideoEncoderFFmpeg::encode(const VideoFrame &frame)
         f->width = frame.width();
         f->height = frame.height();
 //        f->quality = d.avctx->global_quality;
-        switch (timestampMode()) {
-        case TimestampCopy:
+        //switch (timestampMode()) {
+        //case TimestampCopy:
             f->pts = int64_t(frame.timestamp()*frameRate()); // TODO: check monotically increase and fix if not. or another mode?
-            break;
-        case TimestampMonotonic:
-            f->pts = d.nb_encoded+1;
-            break;
-        default:
-            break;
-        }
+        //    break;
+        //case TimestampMonotonic:
+        //    f->pts = d.nb_encoded+1;
+        //    break;
+        //default:
+        //    break;
+        //}
 
         // pts is set in muxer
         const int nb_planes = frame.planeCount();

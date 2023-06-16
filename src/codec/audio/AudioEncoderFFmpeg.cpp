@@ -181,6 +181,8 @@ bool AudioEncoderFFmpeg::encode(const AudioFrame &frame)
         const AudioFormat fmt(frame.format());
         f->format = fmt.sampleFormatFFmpeg();
         f->channel_layout = fmt.channelLayoutFFmpeg();
+        f->ch_layout.nb_channels = fmt.channels();
+        f->ch_layout.u.mask = fmt.channelLayoutFFmpeg();
         // f->channels = fmt.channels(); //remove? not availale in libav9
         // must be (not the last frame) exactly frame_size unless CODEC_CAP_VARIABLE_FRAME_SIZE is set (frame_size==0)
         // TODO: mpv use pcmhack for avctx.frame_size==0. can we use input frame.samplesPerChannel?
@@ -205,7 +207,7 @@ bool AudioEncoderFFmpeg::encode(const AudioFrame &frame)
     int ret = compat_encode(d.avctx, &pkt, &got_packet, &f);
   
     if (ret < 0) {
-        //qWarning("error avcodec_encode_audio2: %s" ,av_err2str(ret));
+        qWarning("error avcodec_encode_audio2: %s" ,av_err2str(ret));
         return false; //false
     }
     if (!got_packet) {
